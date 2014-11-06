@@ -43,7 +43,12 @@ print_and_do_command_exit_on_error chmod 0600 "${CONFIG_ssh_key_file_path}"
 ssh-add -l
 if [ $? -ne 0 ] ; then
 	echo "ssh-agent not started - starting it and exporting connection information to ~/.bashrc ..."
-	print_and_do_command_exit_on_error eval $(ssh-agent)
+	eval $(ssh-agent)
+	if [ $? -ne 0 ] ; then
+		echo "[!] Failed to load SSH agent"
+		CLEANUP_ON_ERROR_FN
+		exit 1
+	fi
 	echo >> ~/.bashrc
 	echo "export SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" >> ~/.bashrc
 fi
