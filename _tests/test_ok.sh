@@ -20,5 +20,6 @@ echo
 echo "-------------"
 echo "Test: OK"
 echo " Loaded identities:"
+source ~/.bashrc
 ssh-add -l
 echo "-------------"
