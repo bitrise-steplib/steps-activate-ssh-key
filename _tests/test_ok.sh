@@ -19,4 +19,6 @@ fi
 echo
 echo "-------------"
 echo "Test: OK"
+echo " Loaded identities:"
+ssh-add -l
 echo "-------------"
