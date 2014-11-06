@@ -42,8 +42,10 @@ print_and_do_command_exit_on_error chmod 0600 "${CONFIG_ssh_key_file_path}"
 
 ssh-add -l
 if [ $? -ne 0 ] ; then
-	echo "ssh-agent not started - starting it..."
-	print_and_do_command_exit_on_error eval `ssh-agent -s`
+	echo "ssh-agent not started - starting it and exporting connection information to ~/.bashrc ..."
+	print_and_do_command_exit_on_error eval $(ssh-agent)
+	echo >> ~/.bashrc
+	echo "export SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" >> ~/.bashrc
 fi
 
 # No passphrase allowed, fail if ssh-add prompts for one
