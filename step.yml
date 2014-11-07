@@ -28,3 +28,8 @@ inputs:
       (Optional) path to save the private key. Default is: $HOME/.ssh/steplib_ssh_step_id_rsa
     mapped_to: SSH_KEY_SAVE_PATH
     is_expand: true
+  - title: |
+      (Optional) Remove other, previously loaded keys and restart ssh-agent?
+      Options: true and false. Default: true.
+    mapped_to: IS_REMOVE_OTHER_IDENTITIES
+    is_expand: false

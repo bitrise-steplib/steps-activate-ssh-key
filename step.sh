@@ -13,6 +13,7 @@ function CLEANUP_ON_ERROR_FN {
 }
 
 CONFIG_ssh_key_file_path="$HOME/.ssh/steplib_ssh_step_id_rsa"
+CONFIG_is_remove_other_identities="true"
 
 if [ -z "${SSH_RSA_PUBLIC_KEY}" ] ; then
 	write_section_to_formatted_output "# Error"
@@ -24,8 +25,15 @@ if [ ! -z "${SSH_KEY_SAVE_PATH}" ] ; then
 	CONFIG_ssh_key_file_path="${SSH_KEY_SAVE_PATH}"
 fi
 
+if [ ! -z "${IS_REMOVE_OTHER_IDENTITIES}" ] ; then
+	if [[ "${IS_REMOVE_OTHER_IDENTITIES}" == "false" ]] ; then
+		CONFIG_is_remove_other_identities="false"
+	fi
+fi
+
 write_section_to_formatted_output "# Configuration"
 echo_string_to_formatted_output "* Path to save the RSA SSH private key: *${CONFIG_ssh_key_file_path}*"
+echo_string_to_formatted_output "* Should remove other identities from the ssh-agent? *${CONFIG_is_remove_other_identities}*"
 
 dir_path_of_key_file=$(dirname "${CONFIG_ssh_key_file_path}")
 print_and_do_command_exit_on_error mkdir -p "${dir_path_of_key_file}"
@@ -41,8 +49,20 @@ print_and_do_command_exit_on_error chmod 0600 "${CONFIG_ssh_key_file_path}"
 ssh-add -l
 # as stated in the man page (https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/ssh-add.1.html)
 #  ssh-add returns the exit code 2 if it could not connect to the ssh-agent
+is_should_start_new_agent=0
 if [ $? -eq 2 ] ; then
 	echo " (i) ssh-agent not started - starting it and exporting connection information to ~/.bashrc ..."
+	is_should_start_new_agent=1
+else
+	# ssh-agent loaded and accessible
+	if [[ "${CONFIG_is_remove_other_identities}" == "true" ]] ; then
+		print_and_do_command_exit_on_error ssh-add -K
+		print_and_do_command_exit_on_error ssh-agent -k
+		is_should_start_new_agent=1
+	fi
+fi
+
+if [ ${is_should_start_new_agent} -eq 1 ] ; then
 	eval $(ssh-agent)
 	if [ $? -ne 0 ] ; then
 		echo "[!] Failed to load SSH agent"
