@@ -51,7 +51,7 @@ ssh-add -l
 #  ssh-add returns the exit code 2 if it could not connect to the ssh-agent
 is_should_start_new_agent=0
 if [ $? -eq 2 ] ; then
-	echo " (i) ssh-agent not started - starting it and exporting connection information to ~/.bashrc ..."
+	echo " (i) ssh-agent not started"
 	is_should_start_new_agent=1
 else
 	# ssh-agent loaded and accessible
@@ -63,6 +63,7 @@ else
 fi
 
 if [ ${is_should_start_new_agent} -eq 1 ] ; then
+	echo " (i) starting a new ssh-agent and exporting connection information to ~/.bashrc"
 	eval $(ssh-agent)
 	if [ $? -ne 0 ] ; then
 		echo "[!] Failed to load SSH agent"
