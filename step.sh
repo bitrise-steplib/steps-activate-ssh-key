@@ -39,7 +39,9 @@ fi
 print_and_do_command_exit_on_error chmod 0600 "${CONFIG_ssh_key_file_path}"
 
 ssh-add -l
-if [ $? -ne 0 ] ; then
+# as stated in the man page (https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/ssh-add.1.html)
+#  ssh-add returns the exit code 2 if it could not connect to the ssh-agent
+if [ $? -eq 2 ] ; then
 	echo " (i) ssh-agent not started - starting it and exporting connection information to ~/.bashrc ..."
 	eval $(ssh-agent)
 	if [ $? -ne 0 ] ; then

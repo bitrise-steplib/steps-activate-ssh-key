@@ -8,6 +8,8 @@ description: |
 
   *Warning: the provided key will overwrite an existing key at
   the provided path (if another key at the path already exists).*
+
+  It will start the ssh-agent if it can't connect to the agent.
 website: https://github.com/bitrise-io/steps-activate-ssh-key
 source:
   git: https://github.com/bitrise-io/steps-activate-ssh-key.git
