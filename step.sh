@@ -25,7 +25,7 @@ if [ ! -z "${SSH_KEY_SAVE_PATH}" ] ; then
 fi
 
 write_section_to_formatted_output "# Configuration"
-echo_string_to_formatted_output "* Path to save the RSA SSH private key: ${CONFIG_ssh_key_file_path}"
+echo_string_to_formatted_output "* Path to save the RSA SSH private key: *${CONFIG_ssh_key_file_path}*"
 
 dir_path_of_key_file=$(dirname "${CONFIG_ssh_key_file_path}")
 print_and_do_command_exit_on_error mkdir -p "${dir_path_of_key_file}"
