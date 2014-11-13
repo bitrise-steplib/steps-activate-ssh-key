@@ -46,11 +46,13 @@ fi
 
 print_and_do_command_exit_on_error chmod 0600 "${CONFIG_ssh_key_file_path}"
 
+is_should_start_new_agent=0
 ssh-add -l
+ssh_agent_check_result=$?
+echo " (i) ssh_agent_check_result: ${ssh_agent_check_result}"
 # as stated in the man page (https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/ssh-add.1.html)
 #  ssh-add returns the exit code 2 if it could not connect to the ssh-agent
-is_should_start_new_agent=0
-if [ $? -eq 2 ] ; then
+if [ $ssh_agent_check_result -eq 2 ] ; then
 	echo " (i) ssh-agent not started"
 	is_should_start_new_agent=1
 else
