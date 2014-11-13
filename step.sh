@@ -55,6 +55,7 @@ if [ $? -eq 2 ] ; then
 	is_should_start_new_agent=1
 else
 	# ssh-agent loaded and accessible
+	echo " (i) running / accessible ssh-agent detected"
 	if [[ "${CONFIG_is_remove_other_identities}" == "true" ]] ; then
 		# remove all keys from the current agent
 		print_and_do_command_exit_on_error ssh-add -D
