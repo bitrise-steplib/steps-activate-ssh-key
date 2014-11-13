@@ -7,7 +7,11 @@
 THIS_SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "${THIS_SCRIPTDIR}"
 
-SSH_RSA_PUBLIC_KEY=$(<testkey_wrong) SSH_KEY_SAVE_PATH="$(PWD)/testsave" bash ../step.sh
+export SSH_RSA_PRIVATE_KEY=$(<testkey_wrong)
+export SSH_KEY_SAVE_PATH="$(PWD)/testsave"
+export IS_REMOVE_OTHER_IDENTITIES="true"
+
+bash ../step.sh
 if [ $? -eq 0 ] ; then
 	echo
 	echo "-------------"

@@ -15,9 +15,9 @@ function CLEANUP_ON_ERROR_FN {
 CONFIG_ssh_key_file_path="$HOME/.ssh/steplib_ssh_step_id_rsa"
 CONFIG_is_remove_other_identities="true"
 
-if [ -z "${SSH_RSA_PUBLIC_KEY}" ] ; then
+if [ -z "${SSH_RSA_PRIVATE_KEY}" ] ; then
 	write_section_to_formatted_output "# Error"
-	write_section_start_to_formatted_output '* Required input `$SSH_RSA_PUBLIC_KEY` not provided!'
+	write_section_start_to_formatted_output '* Required input `$SSH_RSA_PRIVATE_KEY` not provided!'
 	exit 1
 fi
 
@@ -37,7 +37,7 @@ echo_string_to_formatted_output "* Should remove other identities from the ssh-a
 
 dir_path_of_key_file=$(dirname "${CONFIG_ssh_key_file_path}")
 print_and_do_command_exit_on_error mkdir -p "${dir_path_of_key_file}"
-echo "${SSH_RSA_PUBLIC_KEY}" > "${CONFIG_ssh_key_file_path}"
+echo "${SSH_RSA_PRIVATE_KEY}" > "${CONFIG_ssh_key_file_path}"
 if [ $? -ne 0 ] ; then
 	write_section_to_formatted_output "# Error"
 	echo_string_to_formatted_output "* Failed to write the SSH key to the provided path"
@@ -56,9 +56,14 @@ if [ $? -eq 2 ] ; then
 else
 	# ssh-agent loaded and accessible
 	if [[ "${CONFIG_is_remove_other_identities}" == "true" ]] ; then
-		print_and_do_command_exit_on_error ssh-add -K
-		print_and_do_command_exit_on_error ssh-agent -k
-		is_should_start_new_agent=1
+		# remove all keys from the current agent
+		print_and_do_command_exit_on_error ssh-add -D
+		# try to kill the agent
+		ssh-agent -k
+		if [ $? -eq 0 ] ; then
+			# could kill the agent - start a new one
+			is_should_start_new_agent=1
+		fi
 	fi
 fi
 

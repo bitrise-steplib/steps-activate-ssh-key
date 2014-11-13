@@ -1,5 +1,6 @@
 ---
-name: Activate RSA private SSH key
+name: |
+  Activate SSH key (RSA private key)
 description: |
   Saves the provided **RSA private SSH key** to file
   and then loads it into the user's ssh-agent with `ssh-add`.
@@ -22,7 +23,7 @@ requires_admin_user: false
 inputs:
   - title: |
       SSH private key in RSA format
-    mapped_to: SSH_RSA_PUBLIC_KEY
+    mapped_to: SSH_RSA_PRIVATE_KEY
     is_expand: false
   - title: |
       (Optional) path to save the private key. Default is: $HOME/.ssh/steplib_ssh_step_id_rsa
