@@ -48,8 +48,8 @@ function print_and_do_command_exit_on_error {
 #  then print the given error message and exit with the command's exit code
 #
 function fail_if_cmd_error {
-	err_msg=$1
 	last_cmd_result=$?
+	err_msg=$1
 	if [ ${last_cmd_result} -ne 0 ]; then
 		echo "${err_msg}"
 		exit ${last_cmd_result}
