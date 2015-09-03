@@ -37,6 +37,7 @@ inputs:
       is_dont_change_value: true
   - is_remove_other_identities: "true"
     opts:
+      title: Remove other identities?
       description: |-
         (Optional) Remove other, previously loaded keys and restart ssh-agent?
 
