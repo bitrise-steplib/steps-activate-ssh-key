@@ -1,7 +1,6 @@
----
-name: |
-  Activate SSH key (RSA private key)
-description: |
+title: Activate SSH key (RSA private key)
+summary: Activate SSH key (RSA private key)
+description: |-
   Saves the provided **RSA private SSH key** to file
   and then loads it into the user's ssh-agent with `ssh-add`.
 
@@ -12,25 +11,39 @@ description: |
 
   It will start the ssh-agent if it can't connect to the agent.
 website: https://github.com/bitrise-io/steps-activate-ssh-key
-source:
-  git: https://github.com/bitrise-io/steps-activate-ssh-key.git
+source_code_url: https://github.com/bitrise-io/steps-activate-ssh-key
+support_url: https://github.com/bitrise-io/steps-activate-ssh-key/issues
 host_os_tags:
   - osx-10.9
+project_type_tags:
+  - ios
 type_tags:
   - ssh
 requires_admin_user: false
-
+is_always_run: false
+is_skippable: false
+run_if: ".IsCI"
 inputs:
-  - title: |
-      SSH private key in RSA format
-    mapped_to: SSH_RSA_PRIVATE_KEY
-    is_expand: false
-  - title: |
-      (Optional) path to save the private key. Default is: $HOME/.ssh/steplib_ssh_step_id_rsa
-    mapped_to: SSH_KEY_SAVE_PATH
-    is_expand: true
-  - title: |
-      (Optional) Remove other, previously loaded keys and restart ssh-agent?
-      Options: true and false. Default: true.
-    mapped_to: IS_REMOVE_OTHER_IDENTITIES
-    is_expand: false
+  - ssh_rsa_private_key: "$SSH_RSA_PRIVATE_KEY"
+    opts:
+      title: SSH private key in RSA format
+      is_expand: true
+      is_dont_change_value: true
+  - ssh_key_save_path: "$HOME/.ssh/bitrise_step_activate_ssh_key"
+    opts:
+      title: |-
+        (Optional) path to save the private key. Default is: $HOME/.ssh/steplib_ssh_step_id_rsa
+      is_expand: true
+      is_dont_change_value: true
+  - is_remove_other_identities: "true"
+    opts:
+      description: |-
+        (Optional) Remove other, previously loaded keys and restart ssh-agent?
+
+        Options:
+
+        * "true"
+        * "false"
+      is_expand: false
+      value_options: ["true", "false"]
+      is_dont_change_value: true

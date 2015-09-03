@@ -15,18 +15,18 @@ function CLEANUP_ON_ERROR_FN {
 CONFIG_ssh_key_file_path="$HOME/.ssh/steplib_ssh_step_id_rsa"
 CONFIG_is_remove_other_identities="true"
 
-if [ -z "${SSH_RSA_PRIVATE_KEY}" ] ; then
+if [ -z "${ssh_rsa_private_key}" ] ; then
 	write_section_to_formatted_output "# Error"
-	write_section_start_to_formatted_output '* Required input `$SSH_RSA_PRIVATE_KEY` not provided!'
+	write_section_start_to_formatted_output '* Required input `$ssh_rsa_private_key` not provided!'
 	exit 1
 fi
 
-if [ ! -z "${SSH_KEY_SAVE_PATH}" ] ; then
-	CONFIG_ssh_key_file_path="${SSH_KEY_SAVE_PATH}"
+if [ ! -z "${ssh_key_save_path}" ] ; then
+	CONFIG_ssh_key_file_path="${ssh_key_save_path}"
 fi
 
-if [ ! -z "${IS_REMOVE_OTHER_IDENTITIES}" ] ; then
-	if [[ "${IS_REMOVE_OTHER_IDENTITIES}" == "false" ]] ; then
+if [ ! -z "${is_remove_other_identities}" ] ; then
+	if [[ "${is_remove_other_identities}" == "false" ]] ; then
 		CONFIG_is_remove_other_identities="false"
 	fi
 fi
@@ -37,7 +37,7 @@ echo_string_to_formatted_output "* Should remove other identities from the ssh-a
 
 dir_path_of_key_file=$(dirname "${CONFIG_ssh_key_file_path}")
 print_and_do_command_exit_on_error mkdir -p "${dir_path_of_key_file}"
-echo "${SSH_RSA_PRIVATE_KEY}" > "${CONFIG_ssh_key_file_path}"
+echo "${ssh_rsa_private_key}" > "${CONFIG_ssh_key_file_path}"
 if [ $? -ne 0 ] ; then
 	write_section_to_formatted_output "# Error"
 	echo_string_to_formatted_output "* Failed to write the SSH key to the provided path"
