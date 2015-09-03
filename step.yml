@@ -24,6 +24,7 @@ type_tags:
 requires_admin_user: false
 is_always_run: false
 is_skippable: false
+run_if: ".IsCI"
 inputs:
   - ssh_rsa_private_key: "$SSH_RSA_PRIVATE_KEY"
     opts:
