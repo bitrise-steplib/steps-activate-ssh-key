@@ -31,7 +31,7 @@ inputs:
       title: SSH private key in RSA format
       is_expand: true
       is_dont_change_value: true
-  - ssh_key_save_path: "$HOME/.ssh/steplib_ssh_step_id_rsa"
+  - ssh_key_save_path: "$HOME/.ssh/bitrise_step_activate_ssh_key"
     opts:
       title: |-
         (Optional) path to save the private key. Default is: $HOME/.ssh/steplib_ssh_step_id_rsa
