@@ -1,5 +1,5 @@
 title: Activate SSH key (RSA private key)
-summary: Activate SSH key (RSA private key)
+summary: Setup the SSH Key to use with the current workflow
 description: |-
   Saves the provided **RSA private SSH key** to file
   and then loads it into the user's ssh-agent with `ssh-add`.
