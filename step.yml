@@ -55,7 +55,7 @@ inputs:
 outputs:
   - SSH_AUTH_SOCK:
     opts:
-      title: SSH Auth Socker info, in case the ssh-agent was started by this step
+      title: SSH Auth Socket info, in case the ssh-agent was started by this step
       description: |-
         If the `is_should_start_new_agent` option is enabled the no accessible
         ssh-agent if found this Step will start a new ssh-agent.
