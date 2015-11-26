@@ -71,15 +71,14 @@ else
 fi
 
 if [ ${is_should_start_new_agent} -eq 1 ] ; then
-	echo " (i) starting a new ssh-agent and exporting connection information to ~/.bashrc"
+	echo " (i) starting a new ssh-agent and exporting connection information with envman"
 	eval $(ssh-agent)
 	if [ $? -ne 0 ] ; then
 		echo "[!] Failed to load SSH agent"
 		CLEANUP_ON_ERROR_FN
 		exit 1
 	fi
-	echo >> ~/.bashrc
-	echo "export SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" >> ~/.bashrc
+	envman add --key SSH_AUTH_SOCK --value "$SSH_AUTH_SOCK"
 fi
 
 # No passphrase allowed, fail if ssh-add prompts for one

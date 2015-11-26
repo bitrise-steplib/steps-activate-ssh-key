@@ -52,3 +52,13 @@ inputs:
       is_expand: false
       value_options: ["true", "false"]
       is_dont_change_value: true
+outputs:
+  - SSH_AUTH_SOCK:
+    opts:
+      title: SSH Auth Socker info, in case the ssh-agent was started by this step
+      description: |-
+        If the `is_should_start_new_agent` option is enabled the no accessible
+        ssh-agent if found this Step will start a new ssh-agent.
+
+        This output environment variable will contain the path of the
+        SSH Auth Socket, which can be used to access the started ssh-agent.
