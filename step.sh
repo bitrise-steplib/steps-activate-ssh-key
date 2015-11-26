@@ -78,6 +78,7 @@ if [ ${is_should_start_new_agent} -eq 1 ] ; then
 		CLEANUP_ON_ERROR_FN
 		exit 1
 	fi
+	echo " (i) Expose SSH_AUTH_SOCK for the new ssh-agent, with envman"
 	envman add --key SSH_AUTH_SOCK --value "$SSH_AUTH_SOCK"
 fi
 
