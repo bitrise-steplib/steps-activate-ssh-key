@@ -15,8 +15,6 @@ source_code_url: https://github.com/bitrise-io/steps-activate-ssh-key
 support_url: https://github.com/bitrise-io/steps-activate-ssh-key/issues
 host_os_tags:
   - osx-10.9
-project_type_tags:
-  - ios
 type_tags:
   - ssh
 requires_admin_user: false
