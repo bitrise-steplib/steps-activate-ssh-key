@@ -4,7 +4,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
   # define these in your .bitrise.secrets.yml
-  - TEST_SSH_RSA_PRIVATE_KEY:
+  - TEST_SSH_RSA_PRIVATE_KEY: $TEST_SSH_RSA_PRIVATE_KEY
 
 workflows:
   test:
