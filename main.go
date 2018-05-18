@@ -155,7 +155,7 @@ func restartAgent(removeOtherIdentities bool) error {
 
 	if shouldStartNewAgent {
 		fmt.Printf(" (i) starting a new ssh-agent and exporting connection information with envman")
-		cmd := command.New("ssh-agent")
+		cmd := command.New("eval", "ssh-agent")
 		cmd.SetStderr(os.Stderr)
 		log.Printf("-> %s", cmd.PrintableCommandArgs())
 
