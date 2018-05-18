@@ -168,16 +168,10 @@ func restartAgent(removeOtherIdentities bool) error {
 			return fmt.Errorf("[!] Failed to load SSH agent")
 		}
 
+		SSHAuthSock := os.Getenv("SSH_AUTH_SOCK")
 		fmt.Printf(" (i) Expose SSH_AUTH_SOCK for the new ssh-agent, with envman")
-
-		cmdSock := command.New("echo", "$SSH_AUTH_SOCK")
 		fmt.Println()
-		log.Printf("-> %s", cmdSock.PrintableCommandArgs())
-
-		SSHAuthSock, err := cmdSock.RunAndReturnTrimmedOutput()
-		if err != nil {
-			return err
-		}
+		log.Printf("-> export SSH_AUTH_SOCK: %s", SSHAuthSock)
 
 		if err := tools.ExportEnvironmentWithEnvman("SSH_AUTH_SOCK", SSHAuthSock); err != nil {
 			failf("Failed to generate output")
