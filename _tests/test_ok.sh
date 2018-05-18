@@ -12,7 +12,8 @@ export ssh_key_save_path="$(pwd)/testsave"
 export is_remove_other_identities="true"
 
 set +e
-bash ../step.sh
+#bash ../step.sh
+go run ../main.go
 if [ $? -ne 0 ] ; then
 	echo
 	echo "-------------"
