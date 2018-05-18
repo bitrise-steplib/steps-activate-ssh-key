@@ -30,7 +30,7 @@ func main() {
 
 	// Remove SSHRsaPrivateKey from envs
 	if err := os.Setenv("ssh_rsa_private_key", ""); err != nil {
-		failf("Failed to remove ssh_rsa_private_key")
+		failf("* Failed to remove ssh_rsa_private_key")
 	}
 
 	if err := ensureSavePath(cfg.SSHKeySavePath); err != nil {
@@ -71,7 +71,12 @@ func writeSSHKey(savePath string, SSHRsaPrivateKey string) error {
 		return err
 	}
 
-	defer f.Close()
+	defer func() {
+		cerr := f.Close()
+		if cerr != nil {
+			log.Errorf("Failed to close the file, err: %s", cerr)
+		}
+	}()
 
 	_, err = f.WriteString(SSHRsaPrivateKey)
 	return err
@@ -102,7 +107,12 @@ func restartAgent(removeOtherIdentities bool) error {
 	cmd.SetStderr(os.Stderr)
 	log.Printf("-> %s", cmd.PrintableCommandArgs())
 
-	if returnValue, _ := cmd.RunAndReturnExitCode(); returnValue == 2 {
+	returnValue, err := cmd.RunAndReturnExitCode()
+	if err != nil {
+		log.Debugf("Exit code: %s", err)
+	}
+
+	if returnValue == 2 {
 		log.Printf(" (i) ssh_agent_check_result: %d", returnValue)
 		log.Printf(" (i) ssh-agent not started")
 		shouldStartNewAgent = true
@@ -132,7 +142,12 @@ func restartAgent(removeOtherIdentities bool) error {
 			fmt.Println()
 			log.Printf("-> %s", cmdKill.PrintableCommandArgs())
 
-			if returnValue, _ := cmdKill.RunAndReturnExitCode(); returnValue == 0 {
+			returnValue, err := cmdKill.RunAndReturnExitCode()
+			if err != nil {
+				log.Debugf("Exit code: %s", err)
+			}
+
+			if returnValue == 0 {
 				shouldStartNewAgent = true
 			}
 		}
@@ -144,7 +159,12 @@ func restartAgent(removeOtherIdentities bool) error {
 		cmd.SetStderr(os.Stderr)
 		log.Printf("-> %s", cmd.PrintableCommandArgs())
 
-		if returnValue, _ := cmd.RunAndReturnExitCode(); returnValue != 0 {
+		returnValue, err := cmd.RunAndReturnExitCode()
+		if err != nil {
+			log.Debugf("Exit code: %s", err)
+		}
+
+		if returnValue != 0 {
 			return fmt.Errorf("[!] Failed to load SSH agent")
 		}
 
