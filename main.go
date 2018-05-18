@@ -83,7 +83,7 @@ func writeSSHKey(savePath string, SSHRsaPrivateKey string) error {
 }
 
 func checkPassphrase(savePath string) error {
-	cmd := command.New("ssh-add", savePath)
+	cmd := command.New("spawn", "ssh-add", savePath)
 	fmt.Println()
 	log.Printf("-> %s", cmd.PrintableCommandArgs())
 
@@ -171,6 +171,7 @@ func restartAgent(removeOtherIdentities bool) error {
 		fmt.Printf(" (i) Expose SSH_AUTH_SOCK for the new ssh-agent, with envman")
 
 		cmdSock := command.New("echo", "$SSH_AUTH_SOCK")
+		fmt.Println()
 		log.Printf("-> %s", cmdSock.PrintableCommandArgs())
 
 		SSHAuthSock, err := cmdSock.RunAndReturnTrimmedOutput()
