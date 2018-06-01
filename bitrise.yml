@@ -3,7 +3,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - BITRISE_STEP_VERSION: 4.0.0
+  - BITRISE_STEP_VERSION: 4.0.1
   # define these in your .bitrise.secrets.yml
   - SSH_RSA_PRIVATE_KEY: $SSH_RSA_PRIVATE_KEY
 
@@ -110,7 +110,7 @@ workflows:
       # if you want to share this step into a StepLib
       - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
       - STEP_ID_IN_STEPLIB: activate-ssh-key
-      - STEP_GIT_VERION_TAG_TO_SHARE: 3.1.1
+      - STEP_GIT_VERION_TAG_TO_SHARE: $BITRISE_STEP_VERSION
       - STEP_GIT_CLONE_URL: https://github.com/bitrise-io/steps-activate-ssh-key.git
     description: |-
       If this is the first time you try to share a Step you should
