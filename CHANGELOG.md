@@ -1,6 +1,10 @@
-## Changelog (Current version: 4.0.0)
+## Changelog (Current version: 4.0.1)
 
 -----------------
+
+### 4.0.1 (2018 Jun 01)
+
+* [3b7a3a8] Prepare for 4.0.1
 
 ### 4.0.0 (2018 Jun 01)
 
