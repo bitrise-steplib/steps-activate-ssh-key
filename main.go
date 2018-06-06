@@ -31,8 +31,8 @@ func main() {
 	fmt.Println()
 
 	// Remove SSHRsaPrivateKey from envs
-	if err := os.Unsetenv("ssh_rsa_private_key"); err != nil {
-		failf("Failed to remove ssh_rsa_private_key")
+	if err := unsetSSHEnvs(string(cfg.SSHRsaPrivateKey)); err != nil {
+		failf("Failed to remove SSHRsaPrivateKey from envs - error: %s", err)
 	}
 
 	if err := ensureSavePath(cfg.SSHKeySavePath); err != nil {
@@ -198,9 +198,4 @@ fi`
 	}
 
 	return nil
-}
-
-func failf(format string, v ...interface{}) {
-	log.Errorf(format, v...)
-	os.Exit(1)
 }

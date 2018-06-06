@@ -13,7 +13,7 @@ export is_remove_other_identities="true"
 
 set +e
 #bash ../step.sh
-go run ../main.go
+go run ../main.go ../util.go
 if [ $? -eq 0 ] ; then
 	echo
 	echo "-------------"
