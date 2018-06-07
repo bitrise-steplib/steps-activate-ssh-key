@@ -57,6 +57,16 @@ inputs:
       is_expand: false
       value_options: ["true", "false"]
       is_dont_change_value: true
+  - verbose: false
+    opts:
+      title: Enable verbose logging
+      summary: "Enable verbose log option for better debug"
+      description: "Enable verbose log option for better debug"
+      is_expand: true
+      is_required: true
+      value_options:
+        - true
+        - false
 outputs:
   - SSH_AUTH_SOCK:
     opts:

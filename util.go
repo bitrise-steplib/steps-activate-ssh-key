@@ -5,17 +5,22 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-tools/go-steputils/tools"
 )
 
-func unsetSSHEnvs(sshRsaPrivateKey string) error {
+func unsetEnvsBy(value string) error {
 	for _, env := range os.Environ() {
-		key, value := splitEnv(env)
+		key, val := splitEnv(env)
 
-		if value == sshRsaPrivateKey {
-			log.Debugf("%s has been unset", key)
+		if val == value {
 			if err := os.Unsetenv(key); err != nil {
 				return err
 			}
+
+			if err := tools.ExportEnvironmentWithEnvman(key, ""); err != nil {
+				return err
+			}
+			log.Debugf("%s has been unset", key)
 		}
 	}
 	return nil

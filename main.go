@@ -19,6 +19,7 @@ type Config struct {
 	SSHRsaPrivateKey        stepconf.Secret `env:"ssh_rsa_private_key,required"`
 	SSHKeySavePath          string          `env:"ssh_key_save_path,required"`
 	IsRemoveOtherIdentities bool            `env:"is_remove_other_identities,required"`
+	Verbose                 bool            `env:"verbose"`
 }
 
 func main() {
@@ -30,9 +31,11 @@ func main() {
 	stepconf.Print(cfg)
 	fmt.Println()
 
+	log.SetEnableDebugLog(cfg.Verbose)
+
 	// Remove SSHRsaPrivateKey from envs
-	if err := unsetSSHEnvs(string(cfg.SSHRsaPrivateKey)); err != nil {
-		failf("Failed to remove SSHRsaPrivateKey from envs - error: %s", err)
+	if err := unsetEnvsBy(string(cfg.SSHRsaPrivateKey)); err != nil {
+		failf("Failed to remove private key data from envs, error: %s", err)
 	}
 
 	if err := ensureSavePath(cfg.SSHKeySavePath); err != nil {
