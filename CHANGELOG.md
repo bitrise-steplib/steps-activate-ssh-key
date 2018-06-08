@@ -1,6 +1,11 @@
-## Changelog (Current version: 4.0.1)
+## Changelog (Current version: 4.0.2)
 
 -----------------
+
+### 4.0.2 (2018 Jun 08)
+
+* [4bc14c8] Prepare for 4.0.2
+* [4627f38] Remove ssh envs (#10)
 
 ### 4.0.1 (2018 Jun 01)
 
@@ -67,4 +72,4 @@
 
 -----------------
 
-Updated: 2018 Jun 01
+Updated: 2018 Jun 08
