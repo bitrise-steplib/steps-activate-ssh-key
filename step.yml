@@ -38,6 +38,7 @@ inputs:
       title: SSH private key in RSA format
       is_expand: true
       is_dont_change_value: true
+      is_sensitive: true
   - ssh_key_save_path: "$HOME/.ssh/bitrise_step_activate_ssh_key"
     opts:
       title: |-
