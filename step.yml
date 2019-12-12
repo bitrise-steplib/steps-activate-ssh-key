@@ -82,8 +82,8 @@ inputs:
       is_expand: true
       is_required: true
       value_options:
-        - true
-        - false
+        - "true"
+        - "false"
 outputs:
   - SSH_AUTH_SOCK:
     opts:
