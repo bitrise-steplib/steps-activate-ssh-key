@@ -20,12 +20,12 @@ description: |-
   
   ### Useful links
   
-  [Setting up SSH keys](https://devcenter.bitrise.io/getting-started/adding-a-new-app/#setting-up-ssh-keys)
-  [How can I generate an SSH key pair?](https://devcenter.bitrise.io/faq/how-to-generate-ssh-keypair/)
+  - [Setting up SSH keys](https://devcenter.bitrise.io/getting-started/adding-a-new-app/#setting-up-ssh-keys)
+  - [How can I generate an SSH key pair?](https://devcenter.bitrise.io/faq/how-to-generate-ssh-keypair/)
 
   ### Related Steps
   
-  [Git Clone Repository](https://www.bitrise.io/integrations/steps/git-clone)
+  - [Git Clone Repository](https://www.bitrise.io/integrations/steps/git-clone)
 website: https://github.com/bitrise-io/steps-activate-ssh-key
 source_code_url: https://github.com/bitrise-io/steps-activate-ssh-key
 support_url: https://github.com/bitrise-io/steps-activate-ssh-key/issues
