@@ -109,7 +109,7 @@ func restartAgent(removeOtherIdentities bool) error {
 
 		fmt.Printf("Expose SSH_AUTH_SOCK for the new ssh-agent, with envman")
 
-		returnValue = strings.TrimLeft(returnValue, "SSH_AUTH_SOCK=")
+		returnValue = strings.TrimPrefix(returnValue, "SSH_AUTH_SOCK=")
 		returnValue = strings.Split(returnValue, ";")[0]
 
 		if err = os.Setenv("SSH_AUTH_SOCK", returnValue); err != nil {
