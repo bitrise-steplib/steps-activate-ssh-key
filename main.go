@@ -33,35 +33,78 @@ func main() {
 
 	log.SetEnableDebugLog(cfg.Verbose)
 
+	if err := ActivateSSHKey(cfg); err != nil {
+		failf(err.Error())
+	}
+}
+
+// StepError is an error occuring top level in a step
+type StepError struct {
+	Tag, ShortMsg string
+	Err           error
+}
+
+func (e *StepError) Error() string {
+	return fmt.Sprintf("%s, %s", e.ShortMsg, e.Err.Error())
+}
+
+// ActivateSSHKey exports a given SSH key
+func ActivateSSHKey(cfg Config) error {
 	// Remove SSHRsaPrivateKey from envs
 	if err := unsetEnvsBy(string(cfg.SSHRsaPrivateKey)); err != nil {
-		failf("Failed to remove private key data from envs, error: %s", err)
+		return &StepError{
+			Tag:      "remove-private-key-data",
+			ShortMsg: "Failed to remove private key data from envs",
+			Err:      err,
+		}
 	}
 
 	if err := ensureSavePath(cfg.SSHKeySavePath); err != nil {
-		failf("Failed to create the provided path, %s", err)
+		return &StepError{
+			Tag:      "create-ssh-save-path",
+			ShortMsg: "Failed to create the provided path",
+			Err:      err,
+		}
 	}
 
 	if err := fileutil.WriteStringToFile(cfg.SSHKeySavePath, string(cfg.SSHRsaPrivateKey)); err != nil {
-		failf("Failed to write the SSH key to the provided path, %s", err)
+		return &StepError{
+			Tag:      "write-ssh-key",
+			ShortMsg: "Failed to write the SSH key to the provided path",
+			Err:      err,
+		}
 	}
 
 	if err := os.Chmod(cfg.SSHKeySavePath, 0600); err != nil {
-		failf("Failed to change file's access permission, %s", err)
+		return &StepError{
+			Tag:      "change-ssh-key-permission",
+			ShortMsg: "Failed to change file's access permission",
+			Err:      err,
+		}
 	}
 
 	if err := restartAgent(cfg.IsRemoveOtherIdentities); err != nil {
-		failf("Failed to restart SSH Agent, %s", err)
+		return &StepError{
+			Tag:      "restart-ssh-agent",
+			ShortMsg: "Failed to restart SSH Agent",
+			Err:      err,
+		}
 	}
 
 	if err := checkPassphrase(cfg.SSHKeySavePath); err != nil {
-		failf("Error, %s", err)
+		return &StepError{
+			Tag:      "check-passphrase",
+			ShortMsg: "SSH key requires passphrase",
+			Err:      err,
+		}
 	}
 
 	fmt.Println()
 	log.Donef("Success")
 	log.Printf("The SSH key was saved to %s", cfg.SSHKeySavePath)
 	log.Printf("and was successfully added to ssh-agent.")
+
+	return nil
 }
 
 func ensureSavePath(savePath string) error {
@@ -176,7 +219,7 @@ fi`
 
 	filePth := filepath.Join(pth, "tmp_spawn.sh")
 	if err := fileutil.WriteStringToFile(filePth, spawnString); err != nil {
-		failf("Failed to write the SSH key to the provided path, %s", err)
+		return fmt.Errorf("failed to write the SSH key to the provided path, %s", err)
 	}
 
 	if err := os.Chmod(filePth, 0770); err != nil {
@@ -197,7 +240,7 @@ fi`
 
 	if exitCode != 0 {
 		log.Errorf("\nExit code: %d", exitCode)
-		return fmt.Errorf("Failed to add the SSH key to ssh-agent with an empty passphrase")
+		return fmt.Errorf("failed to add the SSH key to ssh-agent with an empty passphrase")
 	}
 
 	return nil
