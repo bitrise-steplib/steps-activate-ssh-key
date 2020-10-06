@@ -2,28 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-tools/go-steputils/stepconf"
-	"github.com/bitrise-tools/go-steputils/tools"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/activatesshkey"
 )
 
-// Config ...
-type Config struct {
-	SSHRsaPrivateKey        stepconf.Secret `env:"ssh_rsa_private_key,required"`
-	SSHKeySavePath          string          `env:"ssh_key_save_path,required"`
-	IsRemoveOtherIdentities bool            `env:"is_remove_other_identities,required"`
-	Verbose                 bool            `env:"verbose"`
-}
-
 func main() {
-	var cfg Config
+	var cfg activatesshkey.Config
 	if err := stepconf.Parse(&cfg); err != nil {
 		failf("Issue with input: %s", err)
 	}
@@ -33,215 +19,11 @@ func main() {
 
 	log.SetEnableDebugLog(cfg.Verbose)
 
-	if err := ActivateSSHKey(cfg); err != nil {
+	if err := activatesshkey.Execute(activatesshkey.Config{
+		SSHRsaPrivateKey:        cfg.SSHRsaPrivateKey,
+		SSHKeySavePath:          cfg.SSHKeySavePath,
+		IsRemoveOtherIdentities: cfg.IsRemoveOtherIdentities,
+	}); err != nil {
 		failf(err.Error())
 	}
-}
-
-// StepError is an error occuring top level in a step
-type StepError struct {
-	Tag, ShortMsg string
-	Err           error
-}
-
-func (e *StepError) Error() string {
-	return fmt.Sprintf("%s, %s", e.ShortMsg, e.Err.Error())
-}
-
-// ActivateSSHKey exports a given SSH key
-func ActivateSSHKey(cfg Config) error {
-	// Remove SSHRsaPrivateKey from envs
-	if err := unsetEnvsBy(string(cfg.SSHRsaPrivateKey)); err != nil {
-		return &StepError{
-			Tag:      "remove-private-key-data",
-			ShortMsg: "Failed to remove private key data from envs",
-			Err:      err,
-		}
-	}
-
-	if err := ensureSavePath(cfg.SSHKeySavePath); err != nil {
-		return &StepError{
-			Tag:      "create-ssh-save-path",
-			ShortMsg: "Failed to create the provided path",
-			Err:      err,
-		}
-	}
-
-	if err := fileutil.WriteStringToFile(cfg.SSHKeySavePath, string(cfg.SSHRsaPrivateKey)); err != nil {
-		return &StepError{
-			Tag:      "write-ssh-key",
-			ShortMsg: "Failed to write the SSH key to the provided path",
-			Err:      err,
-		}
-	}
-
-	if err := os.Chmod(cfg.SSHKeySavePath, 0600); err != nil {
-		return &StepError{
-			Tag:      "change-ssh-key-permission",
-			ShortMsg: "Failed to change file's access permission",
-			Err:      err,
-		}
-	}
-
-	if err := restartAgent(cfg.IsRemoveOtherIdentities); err != nil {
-		return &StepError{
-			Tag:      "restart-ssh-agent",
-			ShortMsg: "Failed to restart SSH Agent",
-			Err:      err,
-		}
-	}
-
-	if err := checkPassphrase(cfg.SSHKeySavePath); err != nil {
-		return &StepError{
-			Tag:      "check-passphrase",
-			ShortMsg: "SSH key requires passphrase",
-			Err:      err,
-		}
-	}
-
-	fmt.Println()
-	log.Donef("Success")
-	log.Printf("The SSH key was saved to %s", cfg.SSHKeySavePath)
-	log.Printf("and was successfully added to ssh-agent.")
-
-	return nil
-}
-
-func ensureSavePath(savePath string) error {
-	dirpath := filepath.Dir(savePath)
-	return os.MkdirAll(dirpath, 0600)
-}
-
-func restartAgent(removeOtherIdentities bool) error {
-	var shouldStartNewAgent bool
-	cmd := command.New("ssh-add", "-l")
-	cmd.SetStderr(os.Stderr)
-	log.Printf("$ %s", cmd.PrintableCommandArgs())
-
-	returnValue, err := cmd.RunAndReturnExitCode()
-	if err != nil {
-		log.Debugf("Exit code: %s", err)
-	}
-
-	//  as stated in the man page (https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/ssh-add.1.html)
-	//  ssh-add returns the exit code 2 if it could not connect to the ssh-agent
-	if returnValue == 2 {
-		log.Printf("ssh_agent_check_result: %d", returnValue)
-		log.Printf("ssh-agent not started")
-		shouldStartNewAgent = true
-	} else {
-		// ssh-agent loaded and accessible
-		log.Printf("ssh_agent_check_result: %d", returnValue)
-		fmt.Printf("running / accessible ssh-agent detected")
-		if removeOtherIdentities {
-			// remove all keys from the current agent
-			cmdRemove := command.New("ssh-add", "-D")
-			cmdRemove.SetStdout(os.Stdout)
-			cmdRemove.SetStderr(os.Stderr)
-
-			fmt.Println()
-			fmt.Println()
-			log.Printf("$ %s", cmdRemove.PrintableCommandArgs())
-
-			if err := cmdRemove.Run(); err != nil {
-				return err
-			}
-
-			// try to kill the agent
-			cmdKill := command.New("ssh-agent", "-k")
-			cmdKill.SetStdout(os.Stdout)
-			cmdKill.SetStderr(os.Stderr)
-
-			fmt.Println()
-			log.Printf("$ %s", cmdKill.PrintableCommandArgs())
-
-			returnValue, err := cmdKill.RunAndReturnExitCode()
-			if err != nil {
-				log.Printf("Exit code: %s", err)
-			}
-
-			if returnValue == 0 {
-				shouldStartNewAgent = true
-			}
-		}
-	}
-
-	if shouldStartNewAgent {
-		fmt.Printf("starting a new ssh-agent and exporting connection information with envman")
-		cmd := command.New("ssh-agent")
-
-		fmt.Println()
-		log.Printf("$ %s", cmd.PrintableCommandArgs())
-
-		returnValue, err := cmd.RunAndReturnTrimmedOutput()
-		if err != nil {
-			log.Debugf("Exit code: %s", err)
-		}
-
-		fmt.Printf("Expose SSH_AUTH_SOCK for the new ssh-agent, with envman")
-
-		returnValue = strings.TrimLeft(returnValue, "SSH_AUTH_SOCK=")
-		returnValue = strings.Split(returnValue, ";")[0]
-
-		if err = os.Setenv("SSH_AUTH_SOCK", returnValue); err != nil {
-			return fmt.Errorf("Failed to set SSH_AUTH_SOCK env")
-		}
-
-		return tools.ExportEnvironmentWithEnvman("SSH_AUTH_SOCK", returnValue)
-	}
-	return nil
-}
-
-// No passphrase allowed, fail if ssh-add prompts for one
-// (in case the key can't be added without a passphrase)
-func checkPassphrase(savePath string) error {
-
-	spawnString := `expect <<EOD
-spawn ssh-add ` + savePath + `
-expect {
-	"Enter passphrase for" {
-		exit 1
-	}
-	"Identity added" {
-		exit 0
-	}
-}
-send "nopass\n"
-EOD
-if [ $? -ne 0 ] ; then
-exit 1
-fi`
-
-	pth, err := pathutil.NormalizedOSTempDirPath("spawn")
-	if err != nil {
-		return err
-	}
-
-	filePth := filepath.Join(pth, "tmp_spawn.sh")
-	if err := fileutil.WriteStringToFile(filePth, spawnString); err != nil {
-		return fmt.Errorf("failed to write the SSH key to the provided path, %s", err)
-	}
-
-	if err := os.Chmod(filePth, 0770); err != nil {
-		return err
-	}
-
-	cmd := command.New("bash", "-c", filePth)
-	cmd.SetStderr(os.Stderr)
-	cmd.SetStdout(os.Stdout)
-
-	fmt.Println()
-	log.Printf("$ %s", cmd.PrintableCommandArgs())
-
-	exitCode, err := cmd.RunAndReturnExitCode()
-	if err != nil {
-		log.Debugf("Exit code: %s", err)
-	}
-
-	if exitCode != 0 {
-		log.Errorf("\nExit code: %d", exitCode)
-		return fmt.Errorf("failed to add the SSH key to ssh-agent with an empty passphrase")
-	}
-
-	return nil
 }
