@@ -38,7 +38,7 @@ func splitEnv(env string) (string, string) {
 
 func ensureSavePath(savePath string) error {
 	dirpath := filepath.Dir(savePath)
-	return os.MkdirAll(dirpath, 0600)
+	return os.MkdirAll(dirpath, 0700)
 }
 
 func restartAgent(removeOtherIdentities bool) error {
