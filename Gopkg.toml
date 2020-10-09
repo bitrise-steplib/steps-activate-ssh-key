@@ -1,6 +1,6 @@
 
 [[constraint]]
-  branch = "master"
+  branch = "ACT-625-scanner-custom-error"
   name = "github.com/bitrise-io/go-steputils"
 
 [[constraint]]
