@@ -46,7 +46,7 @@ run_if: ".IsCI"
 
 toolkit:
   go:
-    package_name: github.com/bitrise-io/steps-activate-ssh-key
+    package_name: github.com/bitrise-steplib/steps-activate-ssh-key
 
 inputs:
   - ssh_rsa_private_key: "$SSH_RSA_PRIVATE_KEY"
