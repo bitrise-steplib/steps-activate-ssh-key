@@ -1,0 +1,17 @@
+# github.com/bitrise-io/bitrise-init v0.0.0-20201012052327-82537a6f1161
+## explicit
+github.com/bitrise-io/bitrise-init/step
+# github.com/bitrise-io/go-steputils v0.0.0-20200722085210-6d5afa53c7b8
+## explicit
+github.com/bitrise-io/go-steputils/stepconf
+github.com/bitrise-io/go-steputils/tools
+# github.com/bitrise-io/go-utils v0.0.0-20200629150542-0c47c16813a4
+## explicit
+github.com/bitrise-io/go-utils/colorstring
+github.com/bitrise-io/go-utils/command
+github.com/bitrise-io/go-utils/errorutil
+github.com/bitrise-io/go-utils/fileutil
+github.com/bitrise-io/go-utils/log
+github.com/bitrise-io/go-utils/parseutil
+github.com/bitrise-io/go-utils/pathutil
+github.com/bitrise-io/go-utils/pointers
