@@ -4,17 +4,82 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
   # define these in your .bitrise.secrets.yml
-  - SSH_RSA_PRIVATE_KEY: $SSH_RSA_PRIVATE_KEY
+  - INVALID_SSH_KEY: $INVALID_SSH_KEY
+  - MISSING_NEWLINE_SSH_KEY: $MISSING_NEWLINE_SSH_KEY
+  - PEM_FORMAT_SSH_KEY: $PEM_FORMAT_SSH_KEY
+  - OPENSSH_FORMAT_SSH_KEY: $OPENSSH_FORMAT_SSH_KEY
 
 workflows:
-  test:
+  ci:
     before_run:
     - audit-this-step
     steps:
-    - go-list:
-    - golint:
-    - errcheck:
-    - go-test:
+    - go-list: {}
+    - golint: {}
+    - errcheck: {}
+    - go-test: {}
+    after_run:
+    - test
+
+  debug:
+    envs:
+    # define in .bitrise.secrets.yml
+    - SSH_RSA_PRIVATE_KEY: $TEST_SSH_KEY 
+    after_run:
+    - _test
+
+  test:
+    envs:
+    - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
+    after_run:
+    - missing_newline_key
+    - pem_format_key
+    - openssh_format_key
+    - invalid_key
+
+  pem_format_key:
+    envs:
+    - SSH_RSA_PRIVATE_KEY: $PEM_FORMAT_SSH_KEY
+    after_run:
+    - _test
+
+  openssh_format_key:
+    envs:
+    - SSH_RSA_PRIVATE_KEY: $OPENSSH_FORMAT_SSH_KEY
+    after_run:
+    - _test
+
+  missing_newline_key:
+    envs:
+    - SSH_RSA_PRIVATE_KEY: $MISSING_NEWLINE_SSH_KEY
+    after_run:
+    - _test
+
+  fail_invalid_key:
+    envs:
+    - SSH_RSA_PRIVATE_KEY: $INVALID_SSH_KEY
+    after_run:
+    - _test
+
+  invalid_key:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -x
+            if [[ -n "$ORIG_BITRISE_SOURCE_DIR" ]]; then
+              cd $ORIG_BITRISE_SOURCE_DIR
+            fi
+
+            bitrise run fail_invalid_key
+            if [[ $? != 1 ]]; then
+              echo "Invalid key did not fail the Step"
+              exit 1
+            fi
+
+  _test:
+    steps:
     - change-workdir:
         title: Switch working dir to test/_tmp dir
         description: |-
@@ -32,12 +97,12 @@ workflows:
             #!/bin/bash
             set -x
             ssh-add -D
-            echo
+            envman add --key KEY_PATH --value "./testsave/bitrise_step_activate_ssh_key"
     - path::./:
         run_if: true
         inputs:
         - ssh_rsa_private_key: $SSH_RSA_PRIVATE_KEY
-        - ssh_key_save_path: "$HOME/.ssh/bitrise_step_activate_ssh_key"
+        - ssh_key_save_path: "$KEY_PATH"
         - is_remove_other_identities: "true"
         - verbose: true
     - script:
@@ -46,22 +111,21 @@ workflows:
         - content: |-
             #!/bin/bash
             set -e
+
+            echo "Loaded identities:"
+            ssh-add -l
+
+            if [[ ! -f $KEY_PATH ]]; then 
+              echo "[!] Private key not found at path: $KEY_PATH"
+              exit 1
+            fi
+
             if [ -z "$SSH_AUTH_SOCK" ] ; then
               echo " [!] Missing: SSH_AUTH_SOCK"
               exit 1
             else
               echo "-> SSH_AUTH_SOCK: $SSH_AUTH_SOCK"
             fi
-    - script:
-        title: CI
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -e
-            set -x
-
-            bash ../_tests/test_ok.sh
-            bash ../_tests/test_wrong.sh
 
   audit-this-step:
     steps:
