@@ -5,6 +5,8 @@ import (
 	log2 "log"
 )
 
+// TODO: Utility
+
 // Logger ...
 type Logger struct {
 }

@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 )
 
+// TODO: utility
+
 // OsFileWriter ...
 type OsFileWriter struct{}
 

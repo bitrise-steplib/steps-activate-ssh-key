@@ -3,7 +3,6 @@ package sshkey
 import (
 	"fmt"
 	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/pathutil"
 	"os"
 	"path/filepath"
 )
@@ -19,6 +18,16 @@ type logger interface {
 	Println()
 }
 
+type commandRunner interface {
+	runAndReturnExitCode(model *command.Model) (int, error)
+	runAndReturnTrimmedOutput(model *command.Model) (string, error)
+	run(model *command.Model) error
+}
+
+type tempDirProvider interface {
+	createTempDir(prefix string) (string, error)
+}
+
 // Agent ...
 type Agent struct {
 	fileWriter      fileWriter
@@ -32,47 +41,14 @@ func NewAgent(fileWriter fileWriter, tempDirProvider tempDirProvider, commandRun
 	return &Agent{fileWriter: fileWriter, tempDirProvider: tempDirProvider, commandRunner: commandRunner, logger: logger}
 }
 
-type commandRunner interface {
-	runAndReturnExitCode(model *command.Model) (int, error)
-	runAndReturnTrimmedOutput(model *command.Model) (string, error)
-	run(model *command.Model) error
-}
+// Start ...
+func (a Agent) Start() (string, error) {
+	cmd := command.New("ssh-agent")
 
-// OsCommandRunner ...
-type OsCommandRunner struct{}
+	a.logger.Println()
+	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
 
-// NewOsCommandRunner ...
-func NewOsCommandRunner() *OsCommandRunner {
-	return &OsCommandRunner{}
-}
-
-func (OsCommandRunner) runAndReturnExitCode(model *command.Model) (int, error) {
-	return model.RunAndReturnExitCode()
-}
-
-func (OsCommandRunner) runAndReturnTrimmedOutput(model *command.Model) (string, error) {
-	return model.RunAndReturnTrimmedOutput()
-}
-
-func (OsCommandRunner) run(model *command.Model) error {
-	return model.Run()
-}
-
-// TODO: pathutils / fs abstraction to go-utils
-type tempDirProvider interface {
-	createTempDir(prefix string) (string, error)
-}
-
-// OsTempDirProvider ...
-type OsTempDirProvider struct{}
-
-// NewOsTempDirProvider ...
-func NewOsTempDirProvider() *OsTempDirProvider {
-	return &OsTempDirProvider{}
-}
-
-func (OsTempDirProvider) createTempDir(prefix string) (string, error) {
-	return pathutil.NormalizedOSTempDirPath(prefix)
+	return a.commandRunner.runAndReturnTrimmedOutput(cmd)
 }
 
 // Kill ...
@@ -86,30 +62,6 @@ func (a Agent) Kill() (int, error) {
 	a.logger.Printf("$ %s", cmdKill.PrintableCommandArgs())
 
 	return a.commandRunner.runAndReturnExitCode(cmdKill)
-}
-
-// Start ...
-func (a Agent) Start() (string, error) {
-	cmd := command.New("ssh-agent")
-
-	a.logger.Println()
-	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
-
-	return a.commandRunner.runAndReturnTrimmedOutput(cmd)
-}
-
-// DeleteKeys ...
-func (a Agent) DeleteKeys() error {
-	// remove all keys from the current agent
-	cmdRemove := command.New("ssh-add", "-D")
-	cmdRemove.SetStdout(os.Stdout)
-	cmdRemove.SetStderr(os.Stderr)
-
-	a.logger.Println()
-	a.logger.Println()
-	a.logger.Printf("$ %s", cmdRemove.PrintableCommandArgs())
-
-	return a.commandRunner.run(cmdRemove)
 }
 
 // ListKeys ...
@@ -168,4 +120,18 @@ fi`
 	}
 
 	return nil
+}
+
+// DeleteKeys ...
+func (a Agent) DeleteKeys() error {
+	// remove all keys from the current agent
+	cmdRemove := command.New("ssh-add", "-D")
+	cmdRemove.SetStdout(os.Stdout)
+	cmdRemove.SetStderr(os.Stderr)
+
+	a.logger.Println()
+	a.logger.Println()
+	a.logger.Printf("$ %s", cmdRemove.PrintableCommandArgs())
+
+	return a.commandRunner.run(cmdRemove)
 }
