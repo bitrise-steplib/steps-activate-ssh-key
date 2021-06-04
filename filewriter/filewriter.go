@@ -24,7 +24,7 @@ func (OsFileWriter) Write(path string, value string, mode os.FileMode) error {
 		return err
 	}
 
-	if err := os.Chmod(path, 0600); err != nil {
+	if err := os.Chmod(path, mode); err != nil {
 		return err
 	}
 	return nil
