@@ -7,7 +7,7 @@ import (
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/filewriter"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/ssh"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"os"
 	"strings"
 )
@@ -34,7 +34,7 @@ type result struct {
 func Run() error {
 	logger := *log.NewLogger()
 	writer := *filewriter.NewOsFileWriter()
-	activateSSHKey := newActivateSSHKey(newEnvStepInputParser(), newOsEnvManager(logger), newFileSSHKeyActivator(writer, *ssh.NewAgent(writer, ssh.NewOsTempDirProvider(), ssh.NewOsCommandRunner(), logger), logger), logger)
+	activateSSHKey := newActivateSSHKey(newEnvStepInputParser(), newOsEnvManager(logger), newFileSSHKeyActivator(writer, *sshkey.NewAgent(writer, sshkey.NewOsTempDirProvider(), sshkey.NewOsCommandRunner(), logger), logger), logger)
 	processConfig, err := activateSSHKey.processConfig()
 	if err != nil {
 		return err
@@ -66,11 +66,11 @@ type fileSSHKeyActivator interface {
 
 type osFileSSHKeyActivator struct {
 	fileWriter fileWriter
-	agent      ssh.Agent
+	agent      sshkey.Agent
 	logger     log.Logger
 }
 
-func newFileSSHKeyActivator(fileWriter fileWriter, agent ssh.Agent, logger log.Logger) *osFileSSHKeyActivator {
+func newFileSSHKeyActivator(fileWriter fileWriter, agent sshkey.Agent, logger log.Logger) *osFileSSHKeyActivator {
 	return &osFileSSHKeyActivator{fileWriter: fileWriter, agent: agent, logger: logger}
 }
 
