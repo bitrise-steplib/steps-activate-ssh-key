@@ -4,10 +4,10 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
   # define these in your .bitrise.secrets.yml
-  - INVALID_SSH_KEY: $SSH_PRIVATE_KEY_NEW
-  - MISSING_NEWLINE_SSH_KEY: $SSH_PRIVATE_KEY_NEW
-  - PEM_FORMAT_SSH_KEY: $SSH_PRIVATE_KEY_NEW
-  - OPENSSH_FORMAT_SSH_KEY: $SSH_PRIVATE_KEY_NEW
+  - INVALID_SSH_KEY: $INVALID_SSH_KEY
+  - MISSING_NEWLINE_SSH_KEY: $MISSING_NEWLINE_SSH_KEY
+  - PEM_FORMAT_SSH_KEY: $PEM_FORMAT_SSH_KEY
+  - OPENSSH_FORMAT_SSH_KEY: $OPENSSH_FORMAT_SSH_KEY
 
 workflows:
   ci:
@@ -24,7 +24,7 @@ workflows:
   debug:
     envs:
     # define in .bitrise.secrets.yml
-    - SSH_RSA_PRIVATE_KEY: $SSH_PRIVATE_KEY_NEW
+    - SSH_RSA_PRIVATE_KEY: $TEST_SSH_KEY 
     after_run:
     - _test
 
@@ -101,7 +101,7 @@ workflows:
     - path::./:
         run_if: true
         inputs:
-        - ssh_rsa_private_key: $SSH_PRIVATE_KEY_NEW
+        - ssh_rsa_private_key: $SSH_RSA_PRIVATE_KEY
         - ssh_key_save_path: "$KEY_PATH"
         - is_remove_other_identities: "true"
         - verbose: true

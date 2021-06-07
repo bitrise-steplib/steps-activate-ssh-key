@@ -3,27 +3,31 @@ package step
 import (
 	"fmt"
 	"github.com/bitrise-io/go-steputils/stepconf"
+	globallog "github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"os"
 	"strings"
 )
 
-type input struct {
+//Input ...
+type Input struct {
 	SSHRsaPrivateKey        stepconf.Secret `env:"ssh_rsa_private_key,required"`
 	SSHKeySavePath          string          `env:"ssh_key_save_path,required"`
 	IsRemoveOtherIdentities bool            `env:"is_remove_other_identities,required"`
 	Verbose                 bool            `env:"verbose"`
 }
 
-type config struct {
+//Config ...
+type Config struct {
 	sshRsaPrivateKey        stepconf.Secret
 	sshKeySavePath          string
 	isRemoveOtherIdentities bool
 	verbose                 bool
 }
 
-type result struct {
+//Result ...
+type Result struct {
 	sshAuthSock string
 }
 
@@ -32,47 +36,61 @@ type fileWriter interface {
 }
 
 type envManager interface {
-	unsetByValue(value string) error
-	set(key string, value string) error
+	UnsetByValue(value string) error
+	Set(key string, value string) error
 }
 
 type stepInputParser interface {
-	parse() (input, error)
+	Parse() (Input, error)
 }
 
-type envStepInputParser struct{}
-
-func newEnvStepInputParser() *envStepInputParser {
-	return &envStepInputParser{}
+type logger interface {
+	Printf(format string, v ...interface{})
+	Donef(format string, v ...interface{})
+	Debugf(format string, v ...interface{})
+	Errorf(format string, v ...interface{})
+	Println()
 }
 
-func (envStepInputParser) parse() (input, error) {
-	var i input
+//EnvStepInputParser ...
+type EnvStepInputParser struct{}
+
+// NewEnvStepInputParser ...
+func NewEnvStepInputParser() *EnvStepInputParser {
+	return &EnvStepInputParser{}
+}
+
+//Parse ...
+func (EnvStepInputParser) Parse() (Input, error) {
+	var i Input
 	if err := stepconf.Parse(&i); err != nil {
-		return input{}, err
+		return Input{}, err
 	}
 	return i, nil
 }
 
-type activateSSHKey struct {
-	stepInputParse      stepInputParser
-	envManager          envManager
-	fileWriter          fileWriter
-	agent               sshkey.Agent
-	logger              log.Logger
+//ActivateSSHKey ...
+type ActivateSSHKey struct {
+	stepInputParse stepInputParser
+	envManager     envManager
+	fileWriter     fileWriter
+	agent          sshkey.Agent
+	logger         logger
 }
 
-func newActivateSSHKey(stepInputParse stepInputParser, envManager envManager, fileWriter fileWriter, agent sshkey.Agent, logger log.Logger) *activateSSHKey {
-	return &activateSSHKey{stepInputParse: stepInputParse, envManager: envManager, fileWriter: fileWriter, agent: agent, logger: logger}
+// NewActivateSSHKey ...
+func NewActivateSSHKey(stepInputParse stepInputParser, envManager envManager, fileWriter fileWriter, agent sshkey.Agent, logger log.Logger) *ActivateSSHKey {
+	return &ActivateSSHKey{stepInputParse: stepInputParse, envManager: envManager, fileWriter: fileWriter, agent: agent, logger: logger}
 }
 
-func (a activateSSHKey) processConfig() (config, error) {
-	input, err := a.stepInputParse.parse()
+// ProcessConfig ...
+func (a ActivateSSHKey) ProcessConfig() (Config, error) {
+	input, err := a.stepInputParse.Parse()
 	if err != nil {
-		return config{}, err
+		return Config{}, err
 	}
 	stepconf.Print(input) // TODO: log.Infof(stepconf.toString(input))
-	return config{
+	return Config{
 		sshRsaPrivateKey:        input.SSHRsaPrivateKey,
 		sshKeySavePath:          input.SSHKeySavePath,
 		isRemoveOtherIdentities: input.IsRemoveOtherIdentities,
@@ -80,35 +98,38 @@ func (a activateSSHKey) processConfig() (config, error) {
 	}, nil
 }
 
-func (a activateSSHKey) run(cfg config) (result, error) {
+// Run ...
+func (a ActivateSSHKey) Run(cfg Config) (Result, error) {
+	globallog.SetEnableDebugLog(cfg.verbose)
 	if err := a.clearSSHKeys(string(cfg.sshRsaPrivateKey)); err != nil {
-		return result{}, err
+		return Result{}, err
 	}
 	output, err := a.activate(cfg.sshKeySavePath, string(cfg.sshRsaPrivateKey), cfg.isRemoveOtherIdentities)
 	if err != nil {
-		return result{}, err
+		return Result{}, err
 	}
 
 	a.logger.Println()
 	a.logger.Donef("Success")
 	a.logger.Printf("The SSH key was saved to %s", cfg.sshKeySavePath)
 	a.logger.Printf("and was successfully added to ssh-agent.")
-	return result{sshAuthSock: output}, nil
+	return Result{sshAuthSock: output}, nil
 }
 
-func (a activateSSHKey) export(result result) error {
+// Export ...
+func (a ActivateSSHKey) Export(result Result) error {
 	authSock := result.sshAuthSock
 	if len(authSock) < 1 {
 		return nil
 	}
-	if err := a.envManager.set("SSH_AUTH_SOCK", authSock); err != nil {
+	if err := a.envManager.Set("SSH_AUTH_SOCK", authSock); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a activateSSHKey) clearSSHKeys(privateKey string) error {
-	if err := a.envManager.unsetByValue(privateKey); err != nil {
+func (a ActivateSSHKey) clearSSHKeys(privateKey string) error {
+	if err := a.envManager.UnsetByValue(privateKey); err != nil {
 		return newStepError(
 			"removing_private_key_data_failed",
 			fmt.Errorf("failed to remove private key data from envs: %v", err),
@@ -118,7 +139,7 @@ func (a activateSSHKey) clearSSHKeys(privateKey string) error {
 	return nil
 }
 
-func (a activateSSHKey) activate(path string, privateKey string, isRemoveOtherIdentities bool) (string, error) {
+func (a ActivateSSHKey) activate(path string, privateKey string, isRemoveOtherIdentities bool) (string, error) {
 	// OpenSSH_8.1p1 on macOS requires a newline at at the end of
 	// private key using the new format (starting with -----BEGIN OPENSSH PRIVATE KEY-----).
 	// See https://www.openssh.com/txt/release-7.8 for new format description.
@@ -141,7 +162,7 @@ func (a activateSSHKey) activate(path string, privateKey string, isRemoveOtherId
 
 	if err := a.agent.AddKey(path); err != nil {
 		return result, newStepError(
-			"ssh_key_requries_passphrase",
+			"ssh_key_requires_passphrase",
 			fmt.Errorf("SSH key requires passphrase: %v", err),
 			"SSH key requires passphrase",
 		)
@@ -149,7 +170,7 @@ func (a activateSSHKey) activate(path string, privateKey string, isRemoveOtherId
 	return result, nil
 }
 
-func (a activateSSHKey) restartAgent(removeOtherIdentities bool) (string, error) {
+func (a ActivateSSHKey) restartAgent(removeOtherIdentities bool) (string, error) {
 	var shouldStartNewAgent bool
 	returnValue, err := a.agent.ListKeys()
 	if err != nil {

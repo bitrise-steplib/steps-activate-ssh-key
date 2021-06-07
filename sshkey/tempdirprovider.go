@@ -12,6 +12,7 @@ func NewOsTempDirProvider() *OsTempDirProvider {
 	return &OsTempDirProvider{}
 }
 
-func (OsTempDirProvider) createTempDir(prefix string) (string, error) {
+// CreateTempDir ...
+func (OsTempDirProvider) CreateTempDir(prefix string) (string, error) {
 	return pathutil.NormalizedOSTempDirPath(prefix)
 }

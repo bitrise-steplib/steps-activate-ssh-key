@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/filewriter"
+	localLogger "github.com/bitrise-steplib/steps-activate-ssh-key/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/step"
 	"os"
@@ -16,18 +17,18 @@ func main() {
 }
 
 func run() error {
-	logger := *log.NewLogger()
+	logger := *localLogger.NewLogger()
 	writer := *filewriter.NewOsFileWriter()
-	activateSSHKey := step.newActivateSSHKey(step.newEnvStepInputParser(), step.newOsEnvManager(logger), step.newOsFileSSHKeyActivator(writer, *sshkey.NewAgent(writer, sshkey.NewOsTempDirProvider(), sshkey.NewOsCommandRunner(), logger), logger), logger)
-	processConfig, err := activateSSHKey.processConfig()
+	activateSSHKey := step.NewActivateSSHKey(step.NewEnvStepInputParser(), step.NewOsEnvManager(logger), writer, *sshkey.NewAgent(writer, sshkey.NewOsTempDirProvider(), sshkey.NewOsCommandRunner(), logger), logger)
+	processConfig, err := activateSSHKey.ProcessConfig()
 	if err != nil {
 		return err
 	}
-	result, err := activateSSHKey.run(processConfig)
+	result, err := activateSSHKey.Run(processConfig)
 	if err != nil {
 		return err
 	}
-	if err := activateSSHKey.export(result); err != nil {
+	if err := activateSSHKey.Export(result); err != nil {
 		return err
 	}
 	return nil

@@ -19,13 +19,13 @@ type logger interface {
 }
 
 type commandRunner interface {
-	runAndReturnExitCode(model *command.Model) (int, error)
-	runAndReturnTrimmedOutput(model *command.Model) (string, error)
-	run(model *command.Model) error
+	RunAndReturnExitCode(model *command.Model) (int, error)
+	RunAndReturnTrimmedOutput(model *command.Model) (string, error)
+	Run(model *command.Model) error
 }
 
 type tempDirProvider interface {
-	createTempDir(prefix string) (string, error)
+	CreateTempDir(prefix string) (string, error)
 }
 
 // Agent ...
@@ -48,7 +48,7 @@ func (a Agent) Start() (string, error) {
 	a.logger.Println()
 	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
 
-	return a.commandRunner.runAndReturnTrimmedOutput(cmd)
+	return a.commandRunner.RunAndReturnTrimmedOutput(cmd)
 }
 
 // Kill ...
@@ -61,7 +61,7 @@ func (a Agent) Kill() (int, error) {
 	a.logger.Println()
 	a.logger.Printf("$ %s", cmdKill.PrintableCommandArgs())
 
-	return a.commandRunner.runAndReturnExitCode(cmdKill)
+	return a.commandRunner.RunAndReturnExitCode(cmdKill)
 }
 
 // ListKeys ...
@@ -70,7 +70,7 @@ func (a Agent) ListKeys() (int, error) {
 	cmd.SetStderr(os.Stderr)
 	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
 
-	return a.commandRunner.runAndReturnExitCode(cmd)
+	return a.commandRunner.RunAndReturnExitCode(cmd)
 }
 
 // AddKey ...
@@ -91,7 +91,7 @@ if [ $? -ne 0 ] ; then
 exit 1
 fi`
 
-	pth, err := a.tempDirProvider.createTempDir("spawn")
+	pth, err := a.tempDirProvider.CreateTempDir("spawn")
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ fi`
 	a.logger.Println()
 	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
 
-	exitCode, err := a.commandRunner.runAndReturnExitCode(cmd)
+	exitCode, err := a.commandRunner.RunAndReturnExitCode(cmd)
 
 	if err != nil {
 		a.logger.Debugf("Exit code: %s", err)
@@ -133,5 +133,5 @@ func (a Agent) DeleteKeys() error {
 	a.logger.Println()
 	a.logger.Printf("$ %s", cmdRemove.PrintableCommandArgs())
 
-	return a.commandRunner.run(cmdRemove)
+	return a.commandRunner.Run(cmdRemove)
 }

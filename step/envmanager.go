@@ -8,15 +8,19 @@ import (
 )
 
 // TODO: go-steputils
-type osEnvManager struct {
+
+// OsEnvManager ...
+type OsEnvManager struct {
 	logger log.Logger
 }
 
-func newOsEnvManager(logger log.Logger) *osEnvManager {
-	return &osEnvManager{logger: logger}
+// NewOsEnvManager ...
+func NewOsEnvManager(logger log.Logger) *OsEnvManager {
+	return &OsEnvManager{logger: logger}
 }
 
-func (o osEnvManager) set(key string, value string) error {
+//Set ...
+func (o OsEnvManager) Set(key string, value string) error {
 	if err := os.Setenv(key, value); err != nil {
 		return err
 	}
@@ -26,7 +30,8 @@ func (o osEnvManager) set(key string, value string) error {
 	return nil
 }
 
-func (o osEnvManager) unsetByValue(value string) error {
+//UnsetByValue ...
+func (o OsEnvManager) UnsetByValue(value string) error {
 	for _, env := range os.Environ() {
 		key, val := splitEnv(env)
 

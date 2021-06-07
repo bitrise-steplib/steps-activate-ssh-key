@@ -10,14 +10,17 @@ func NewOsCommandRunner() *OsCommandRunner {
 	return &OsCommandRunner{}
 }
 
-func (OsCommandRunner) runAndReturnExitCode(model *command.Model) (int, error) {
+// RunAndReturnExitCode ...
+func (OsCommandRunner) RunAndReturnExitCode(model *command.Model) (int, error) {
 	return model.RunAndReturnExitCode()
 }
 
-func (OsCommandRunner) runAndReturnTrimmedOutput(model *command.Model) (string, error) {
+// RunAndReturnTrimmedOutput ...
+func (OsCommandRunner) RunAndReturnTrimmedOutput(model *command.Model) (string, error) {
 	return model.RunAndReturnTrimmedOutput()
 }
 
-func (OsCommandRunner) run(model *command.Model) error {
+// Run ...
+func (OsCommandRunner) Run(model *command.Model) error {
 	return model.Run()
 }

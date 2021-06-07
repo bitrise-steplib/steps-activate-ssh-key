@@ -1,49 +1,80 @@
 package step
 
 import (
-	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
-	"reflect"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
-func Test_activateSSHKey_run(t *testing.T) {
-	type fields struct {
-		stepInputParse stepInputParser
-		envManager     envManager
-		fileWriter     fileWriter
-		agent          sshkey.Agent
-		logger         log.Logger
+func Test_SSHPrivateKeyRemoved(t *testing.T) {
+	envManager := prepareDefaultEnvManager()
+	fileWriter := prepareDefaultFileWriter()
+	logger := prepareDefaultLogger()
+	commandRunner := prepareDefaultCommandRunner()
+	tempDirProvider := prepareDefaultTempDirProvider()
+	activateSSHKey := prepareActivateSSHKey(envManager, fileWriter, logger, commandRunner, tempDirProvider)
+	config := getDefaultConfig()
+
+	output, err := activateSSHKey.Run(config)
+
+	assert.NoError(t, err)
+	assert.Equal(t, output.sshAuthSock, "")
+	envManager.AssertNumberOfCalls(t, "UnsetByValue", 1)
+	envManager.AssertCalled(t, "UnsetByValue", "test-key")
+}
+
+func prepareDefaultCommandRunner() (commandRunner *mockCommandRunner) {
+	commandRunner = new(mockCommandRunner)
+	commandRunner.On("RunAndReturnExitCode", mock.Anything).Return(0, nil)
+	commandRunner.On("RunAndReturnTrimmedOutput", mock.Anything).Return("", nil)
+	commandRunner.On("Run", mock.Anything).Return(nil)
+	return commandRunner
+}
+
+func prepareDefaultFileWriter() (fileWriter *mockFileWriter) {
+	fileWriter = new(mockFileWriter)
+	fileWriter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	return fileWriter
+}
+
+func prepareDefaultLogger() (logger *mockLogger) {
+	logger = new(mockLogger)
+	logger.On("Debugf", mock.Anything, mock.Anything).Return()
+	logger.On("Donef", mock.Anything, mock.Anything).Return()
+	logger.On("Printf", mock.Anything, mock.Anything).Return()
+	logger.On("Errorf", mock.Anything, mock.Anything).Return()
+	logger.On("Println").Return()
+	return logger
+}
+
+func prepareDefaultEnvManager() (envManager *mockEnvManager) {
+	envManager = new(mockEnvManager)
+	envManager.On("UnsetByValue", mock.Anything).Return(nil)
+	return envManager
+}
+
+func getDefaultConfig() Config {
+	return Config{
+		sshRsaPrivateKey:        "test-key",
+		sshKeySavePath:          "test-path",
+		isRemoveOtherIdentities: false,
+		verbose:                 false,
 	}
-	type args struct {
-		cfg config
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    result
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			a := activateSSHKey{
-				stepInputParse: tt.fields.stepInputParse,
-				envManager:     tt.fields.envManager,
-				fileWriter:     tt.fields.fileWriter,
-				agent:          tt.fields.agent,
-				logger:         tt.fields.logger,
-			}
-			got, err := a.run(tt.args.cfg)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("run() got = %v, want %v", got, tt.want)
-			}
-		})
+}
+
+func prepareDefaultTempDirProvider() (tempDirProvider *mockTempDirProvider) {
+	tempDirProvider = new(mockTempDirProvider)
+	tempDirProvider.On("CreateTempDir", mock.Anything).Return("temp-dir", nil)
+	return tempDirProvider
+}
+
+func prepareActivateSSHKey(manager *mockEnvManager, writer *mockFileWriter, logger *mockLogger, runner *mockCommandRunner, provider *mockTempDirProvider) *ActivateSSHKey {
+	return &ActivateSSHKey{
+		stepInputParse: nil,
+		envManager:     manager,
+		fileWriter:     writer,
+		agent:          *sshkey.NewAgent(writer, provider, runner, logger),
+		logger:         logger,
 	}
 }
