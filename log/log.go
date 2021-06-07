@@ -1,8 +1,8 @@
 package log
 
 import (
+	"fmt"
 	"github.com/bitrise-io/go-utils/log"
-	log2 "log"
 )
 
 // TODO: Utility
@@ -38,5 +38,5 @@ func (l Logger) Errorf(format string, v ...interface{}) {
 
 // Println ...
 func (l Logger) Println() {
-	log2.Print("\n")
+	fmt.Println()
 }

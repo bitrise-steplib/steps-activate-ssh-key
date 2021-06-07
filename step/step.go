@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/bitrise-io/go-steputils/stepconf"
 	globallog "github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"os"
 	"strings"
@@ -33,11 +32,6 @@ type Result struct {
 
 type fileWriter interface {
 	Write(path string, value string, mode os.FileMode) error
-}
-
-type envManager interface {
-	UnsetByValue(value string) error
-	Set(key string, value string) error
 }
 
 type stepInputParser interface {
@@ -71,16 +65,18 @@ func (EnvStepInputParser) Parse() (Input, error) {
 
 //ActivateSSHKey ...
 type ActivateSSHKey struct {
-	stepInputParse stepInputParser
-	envManager     envManager
-	fileWriter     fileWriter
-	agent          sshkey.Agent
-	logger         logger
+	stepInputParse   stepInputParser
+	envValueClearer  CombinedEnvValueClearer
+	envmanEnvManager envManager
+	osEnvManager     envManager
+	fileWriter       fileWriter
+	agent            sshkey.Agent
+	logger           logger
 }
 
-// NewActivateSSHKey ...
-func NewActivateSSHKey(stepInputParse stepInputParser, envManager envManager, fileWriter fileWriter, agent sshkey.Agent, logger log.Logger) *ActivateSSHKey {
-	return &ActivateSSHKey{stepInputParse: stepInputParse, envManager: envManager, fileWriter: fileWriter, agent: agent, logger: logger}
+//NewActivateSSHKey ...
+func NewActivateSSHKey(stepInputParse stepInputParser, envValueClearer CombinedEnvValueClearer, envmanEnvManager envManager, osEnvManager envManager, fileWriter fileWriter, agent sshkey.Agent, logger logger) *ActivateSSHKey {
+	return &ActivateSSHKey{stepInputParse: stepInputParse, envValueClearer: envValueClearer, envmanEnvManager: envmanEnvManager, osEnvManager: osEnvManager, fileWriter: fileWriter, agent: agent, logger: logger}
 }
 
 // ProcessConfig ...
@@ -122,14 +118,14 @@ func (a ActivateSSHKey) Export(result Result) error {
 	if len(authSock) < 1 {
 		return nil
 	}
-	if err := a.envManager.Set("SSH_AUTH_SOCK", authSock); err != nil {
+	if err := a.envmanEnvManager.Set("SSH_AUTH_SOCK", authSock); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (a ActivateSSHKey) clearSSHKeys(privateKey string) error {
-	if err := a.envManager.UnsetByValue(privateKey); err != nil {
+	if err := a.envValueClearer.UnsetByValue(privateKey); err != nil {
 		return newStepError(
 			"removing_private_key_data_failed",
 			fmt.Errorf("failed to remove private key data from envs: %v", err),
@@ -213,6 +209,10 @@ func (a ActivateSSHKey) restartAgent(removeOtherIdentities bool) (string, error)
 
 		returnValue = strings.TrimPrefix(returnValue, "SSH_AUTH_SOCK=")
 		returnValue = strings.Split(returnValue, ";")[0]
+
+		if err = a.osEnvManager.Set("SSH_AUTH_SOCK", returnValue); err != nil {
+			return "", fmt.Errorf("failed to set SSH_AUTH_SOCK env: %s", err.Error())
+		}
 
 		return returnValue, nil
 	}

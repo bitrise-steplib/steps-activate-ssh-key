@@ -7,35 +7,43 @@ import (
 	"testing"
 )
 
+const privateKey = "test-key"
+const envKey = "env-key"
+
 func Test_SSHPrivateKeyRemoved(t *testing.T) {
-	envManager := prepareDefaultEnvManager()
+	osManager := preparePrePopulatedOsEnvManager()
+	envmanManager := prepareDefaultEnvmanEnvManager()
 	fileWriter := prepareDefaultFileWriter()
 	logger := prepareDefaultLogger()
-	commandRunner := prepareDefaultCommandRunner()
 	tempDirProvider := prepareDefaultTempDirProvider()
-	activateSSHKey := prepareActivateSSHKey(envManager, fileWriter, logger, commandRunner, tempDirProvider)
+	activateSSHKey := prepareActivateSSHKey(osManager, envmanManager, fileWriter, logger, tempDirProvider)
 	config := getDefaultConfig()
 
 	output, err := activateSSHKey.Run(config)
 
 	assert.NoError(t, err)
 	assert.Equal(t, output.sshAuthSock, "")
-	envManager.AssertNumberOfCalls(t, "UnsetByValue", 1)
-	envManager.AssertCalled(t, "UnsetByValue", "test-key")
+	osManager.AssertNumberOfCalls(t, "Unset", 1)
+	osManager.AssertCalled(t, "Unset", envKey)
+	envmanManager.AssertNumberOfCalls(t, "Unset", 1)
+	envmanManager.AssertCalled(t, "Unset", envKey)
 }
 
-func prepareDefaultCommandRunner() (commandRunner *mockCommandRunner) {
-	commandRunner = new(mockCommandRunner)
-	commandRunner.On("RunAndReturnExitCode", mock.Anything).Return(0, nil)
-	commandRunner.On("RunAndReturnTrimmedOutput", mock.Anything).Return("", nil)
-	commandRunner.On("Run", mock.Anything).Return(nil)
-	return commandRunner
+func prepareDefaultCommand() (command *MockCommand) {
+	command = new(MockCommand)
+	command.On("RunAndReturnExitCode", mock.Anything).Return(0, nil)
+	command.On("RunAndReturnTrimmedOutput", mock.Anything).Return("", nil)
+	command.On("Run", mock.Anything).Return(nil)
+	command.On("PrintableCommandArgs").Return("")
+	command.On("SetStdout", mock.Anything).Return(nil)
+	command.On("SetStderr", mock.Anything).Return(nil)
+	return
 }
 
 func prepareDefaultFileWriter() (fileWriter *mockFileWriter) {
 	fileWriter = new(mockFileWriter)
 	fileWriter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	return fileWriter
+	return
 }
 
 func prepareDefaultLogger() (logger *mockLogger) {
@@ -45,36 +53,51 @@ func prepareDefaultLogger() (logger *mockLogger) {
 	logger.On("Printf", mock.Anything, mock.Anything).Return()
 	logger.On("Errorf", mock.Anything, mock.Anything).Return()
 	logger.On("Println").Return()
-	return logger
+	return
 }
 
-func prepareDefaultEnvManager() (envManager *mockEnvManager) {
+func prepareDefaultEnvmanEnvManager() (envManager *mockEnvManager) {
 	envManager = new(mockEnvManager)
-	envManager.On("UnsetByValue", mock.Anything).Return(nil)
-	return envManager
+	envManager.On("Set", mock.Anything, mock.Anything).Return(nil)
+	envManager.On("Unset", mock.Anything).Return(nil)
+	return
+}
+
+func preparePrePopulatedOsEnvManager() (envManager *mockExtendedEnvManager) {
+	envManager = new(mockExtendedEnvManager)
+	envManager.On("Set", mock.Anything, mock.Anything).Return(nil)
+	envManager.On("Unset", mock.Anything).Return(nil)
+	envManager.On("List").Return([]string{envKey + "=" + privateKey})
+	return
+}
+
+func prepareDefaultTempDirProvider() (tempDirProvider *mockTempDirProvider) {
+	tempDirProvider = new(mockTempDirProvider)
+	tempDirProvider.On("CreateTempDir", mock.Anything).Return("temp-dir", nil)
+	return
 }
 
 func getDefaultConfig() Config {
+
 	return Config{
-		sshRsaPrivateKey:        "test-key",
+		sshRsaPrivateKey:        privateKey,
 		sshKeySavePath:          "test-path",
 		isRemoveOtherIdentities: false,
 		verbose:                 false,
 	}
 }
 
-func prepareDefaultTempDirProvider() (tempDirProvider *mockTempDirProvider) {
-	tempDirProvider = new(mockTempDirProvider)
-	tempDirProvider.On("CreateTempDir", mock.Anything).Return("temp-dir", nil)
-	return tempDirProvider
-}
-
-func prepareActivateSSHKey(manager *mockEnvManager, writer *mockFileWriter, logger *mockLogger, runner *mockCommandRunner, provider *mockTempDirProvider) *ActivateSSHKey {
+func prepareActivateSSHKey(osManager *mockExtendedEnvManager, envmanManager *mockEnvManager, writer *mockFileWriter, logger *mockLogger, provider *mockTempDirProvider) *ActivateSSHKey {
 	return &ActivateSSHKey{
-		stepInputParse: nil,
-		envManager:     manager,
-		fileWriter:     writer,
-		agent:          *sshkey.NewAgent(writer, provider, runner, logger),
-		logger:         logger,
+		stepInputParse:   nil,
+		envmanEnvManager: envmanManager,
+		osEnvManager:     osManager,
+		envValueClearer:  *NewCombinedEnvValueClearer(logger, osManager, envmanManager),
+		fileWriter:       writer,
+		agent:            *sshkey.NewAgent(writer, provider, logger, func(name string, args ...string) *sshkey.Command {
+			var c sshkey.Command = prepareDefaultCommand()
+			return &c
+		}),
+		logger:           logger,
 	}
 }

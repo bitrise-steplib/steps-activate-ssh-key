@@ -1,48 +1,46 @@
 package step
 
 import (
-	"github.com/bitrise-io/go-steputils/tools"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
-	"os"
 	"strings"
 )
 
-// TODO: go-steputils
-
-// OsEnvManager ...
-type OsEnvManager struct {
-	logger log.Logger
+type envManager interface {
+	Unset(key string) error
+	Set(key string, value string) error
 }
 
-// NewOsEnvManager ...
-func NewOsEnvManager(logger log.Logger) *OsEnvManager {
-	return &OsEnvManager{logger: logger}
+type extendedEnvManager interface {
+	Unset(key string) error
+	Set(key string, value string) error
+	List() []string
 }
 
-//Set ...
-func (o OsEnvManager) Set(key string, value string) error {
-	if err := os.Setenv(key, value); err != nil {
-		return err
-	}
-	if err := tools.ExportEnvironmentWithEnvman(key, value); err != nil {
-		return err
-	}
-	return nil
+//CombinedEnvValueClearer ...
+type CombinedEnvValueClearer struct {
+	logger           logger
+	osEnvManager     extendedEnvManager
+	envmanEnvManager envManager
+}
+
+//NewCombinedEnvValueClearer ...
+func NewCombinedEnvValueClearer(logger logger, osEnvManager extendedEnvManager, envmanEnvManager envManager) *CombinedEnvValueClearer {
+	return &CombinedEnvValueClearer{logger: logger, osEnvManager: osEnvManager, envmanEnvManager: envmanEnvManager}
 }
 
 //UnsetByValue ...
-func (o OsEnvManager) UnsetByValue(value string) error {
-	for _, env := range os.Environ() {
+func (o CombinedEnvValueClearer) UnsetByValue(value string) error {
+	for _, env := range o.osEnvManager.List() {
 		key, val := splitEnv(env)
 
 		if val == value {
-			if err := os.Unsetenv(key); err != nil {
+			if err := o.osEnvManager.Unset(key); err != nil {
 				return err
 			}
 
-			if err := tools.ExportEnvironmentWithEnvman(key, ""); err != nil {
+			if err := o.envmanEnvManager.Unset(key); err != nil {
 				return err
 			}
+
 			o.logger.Debugf("%s has been unset", key)
 		}
 	}
