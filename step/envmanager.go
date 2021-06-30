@@ -3,43 +3,33 @@ package step
 import (
 	"strings"
 
+	"github.com/bitrise-steplib/steps-activate-ssh-key/env"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 )
 
-type envManager interface {
-	Unset(key string) error
-	Set(key string, value string) error
-}
-
-type extendedEnvManager interface {
-	Unset(key string) error
-	Set(key string, value string) error
-	List() []string
-}
-
 //CombinedEnvValueClearer ...
 type CombinedEnvValueClearer struct {
-	logger           log.Logger
-	osEnvManager     extendedEnvManager
-	envmanEnvManager envManager
+	logger              log.Logger
+	osEnvRepository     env.OsRepository
+	envmanEnvRepository env.EnvmanRepository
 }
 
 //NewCombinedEnvValueClearer ...
-func NewCombinedEnvValueClearer(logger log.Logger, osEnvManager extendedEnvManager, envmanEnvManager envManager) *CombinedEnvValueClearer {
-	return &CombinedEnvValueClearer{logger: logger, osEnvManager: osEnvManager, envmanEnvManager: envmanEnvManager}
+func NewCombinedEnvValueClearer(logger log.Logger, osEnvRepository env.OsRepository, envmanEnvRepository env.EnvmanRepository) *CombinedEnvValueClearer {
+	return &CombinedEnvValueClearer{logger: logger, osEnvRepository: osEnvRepository, envmanEnvRepository: envmanEnvRepository}
 }
 
 //UnsetByValue ...
 func (o CombinedEnvValueClearer) UnsetByValue(value string) error {
-	for _, env := range o.osEnvManager.List() {
+	for _, env := range o.osEnvRepository.List() {
 		key, val := splitEnv(env)
 
 		if val == value {
-			if err := o.osEnvManager.Unset(key); err != nil {
+			if err := o.osEnvRepository.Unset(key); err != nil {
 				return err
 			}
 
-			if err := o.envmanEnvManager.Unset(key); err != nil {
+			if err := o.envmanEnvRepository.Unset(key); err != nil {
 				return err
 			}
 

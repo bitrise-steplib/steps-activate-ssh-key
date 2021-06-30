@@ -1,10 +1,12 @@
 package step
 
 import (
+	"testing"
+
+	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 const privateKey = "test-key"
@@ -89,15 +91,15 @@ func getDefaultConfig() Config {
 
 func prepareActivateSSHKey(osManager *mockExtendedEnvManager, envmanManager *mockEnvManager, writer *mockFileWriter, logger *mockLogger, provider *mockTempDirProvider) *ActivateSSHKey {
 	return &ActivateSSHKey{
-		stepInputParse:   nil,
-		envmanEnvManager: envmanManager,
-		osEnvManager:     osManager,
-		envValueClearer:  *NewCombinedEnvValueClearer(logger, osManager, envmanManager),
-		fileWriter:       writer,
-		agent:            *sshkey.NewAgent(writer, provider, logger, func(name string, args ...string) *sshkey.Command {
-			var c sshkey.Command = prepareDefaultCommand()
-			return &c
+		stepInputParse:      nil,
+		envmanEnvRepository: envmanManager,
+		osEnvRepository:     osManager,
+		envValueClearer:     *NewCombinedEnvValueClearer(logger, osManager, envmanManager),
+		fileWriter:          writer,
+		agent: *sshkey.NewAgent(writer, provider, logger, func(name string, args ...string) command.Command {
+			var c command.Command = prepareDefaultCommand()
+			return c
 		}),
-		logger:           logger,
+		logger: logger,
 	}
 }
