@@ -1,23 +1,28 @@
 package filewriter
 
 import (
-	"github.com/bitrise-io/go-utils/fileutil"
 	"os"
 	"path/filepath"
+
+	"github.com/bitrise-io/go-utils/fileutil"
 )
 
 // TODO: utility
 
-// OsFileWriter ...
-type OsFileWriter struct{}
+// FileWriter ...
+type FileWriter interface {
+	Write(path string, value string, mode os.FileMode) error
+}
+
+type osFileWriter struct{}
 
 // NewOsFileWriter ...
-func NewOsFileWriter() *OsFileWriter {
-	return &OsFileWriter{}
+func NewOsFileWriter() FileWriter {
+	return &osFileWriter{}
 }
 
 // Write ...
-func (OsFileWriter) Write(path string, value string, mode os.FileMode) error {
+func (osFileWriter) Write(path string, value string, mode os.FileMode) error {
 	if err := ensureSavePath(path); err != nil {
 		return err
 	}

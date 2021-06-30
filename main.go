@@ -37,7 +37,7 @@ func run() error {
 
 func createStep() *step.ActivateSSHKey {
 	logger := localLogger.NewLogger()
-	writer := *filewriter.NewOsFileWriter()
+	writer := filewriter.NewOsFileWriter()
 	osEnvManager := *envmanager.NewOsEnvManager()
 	envmanEnvManager := *envmanager.NewEnvmanEnvManager()
 	return step.NewActivateSSHKey(step.NewEnvStepInputParser(), *step.NewCombinedEnvValueClearer(logger, osEnvManager, envmanEnvManager), envmanEnvManager, osEnvManager, writer, *sshkey.NewAgent(writer, sshkey.NewOsTempDirProvider(), logger, func(name string, args ...string) *sshkey.Command {
