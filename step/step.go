@@ -2,11 +2,13 @@ package step
 
 import (
 	"fmt"
-	"github.com/bitrise-io/go-steputils/stepconf"
-	globallog "github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"os"
 	"strings"
+
+	"github.com/bitrise-io/go-steputils/stepconf"
+	globallog "github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 )
 
 //Input ...
@@ -38,14 +40,6 @@ type stepInputParser interface {
 	Parse() (Input, error)
 }
 
-type logger interface {
-	Printf(format string, v ...interface{})
-	Donef(format string, v ...interface{})
-	Debugf(format string, v ...interface{})
-	Errorf(format string, v ...interface{})
-	Println()
-}
-
 //EnvStepInputParser ...
 type EnvStepInputParser struct{}
 
@@ -71,11 +65,11 @@ type ActivateSSHKey struct {
 	osEnvManager     envManager
 	fileWriter       fileWriter
 	agent            sshkey.Agent
-	logger           logger
+	logger           log.Logger
 }
 
 //NewActivateSSHKey ...
-func NewActivateSSHKey(stepInputParse stepInputParser, envValueClearer CombinedEnvValueClearer, envmanEnvManager envManager, osEnvManager envManager, fileWriter fileWriter, agent sshkey.Agent, logger logger) *ActivateSSHKey {
+func NewActivateSSHKey(stepInputParse stepInputParser, envValueClearer CombinedEnvValueClearer, envmanEnvManager envManager, osEnvManager envManager, fileWriter fileWriter, agent sshkey.Agent, logger log.Logger) *ActivateSSHKey {
 	return &ActivateSSHKey{stepInputParse: stepInputParse, envValueClearer: envValueClearer, envmanEnvManager: envmanEnvManager, osEnvManager: osEnvManager, fileWriter: fileWriter, agent: agent, logger: logger}
 }
 
@@ -115,6 +109,7 @@ func (a ActivateSSHKey) Run(cfg Config) (Result, error) {
 // Export ...
 func (a ActivateSSHKey) Export(result Result) error {
 	authSock := result.sshAuthSock
+	// NOTE: authSock == ""
 	if len(authSock) < 1 {
 		return nil
 	}

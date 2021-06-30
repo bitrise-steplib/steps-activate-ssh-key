@@ -2,6 +2,8 @@ package step
 
 import (
 	"strings"
+
+	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 )
 
 type envManager interface {
@@ -17,13 +19,13 @@ type extendedEnvManager interface {
 
 //CombinedEnvValueClearer ...
 type CombinedEnvValueClearer struct {
-	logger           logger
+	logger           log.Logger
 	osEnvManager     extendedEnvManager
 	envmanEnvManager envManager
 }
 
 //NewCombinedEnvValueClearer ...
-func NewCombinedEnvValueClearer(logger logger, osEnvManager extendedEnvManager, envmanEnvManager envManager) *CombinedEnvValueClearer {
+func NewCombinedEnvValueClearer(logger log.Logger, osEnvManager extendedEnvManager, envmanEnvManager envManager) *CombinedEnvValueClearer {
 	return &CombinedEnvValueClearer{logger: logger, osEnvManager: osEnvManager, envmanEnvManager: envmanEnvManager}
 }
 
