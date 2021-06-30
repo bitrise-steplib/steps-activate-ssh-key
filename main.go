@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	utilcommand "github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/envmanager"
@@ -8,7 +10,6 @@ import (
 	localLogger "github.com/bitrise-steplib/steps-activate-ssh-key/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/step"
-	"os"
 )
 
 func main() {
@@ -18,25 +19,29 @@ func main() {
 	}
 }
 
-func run() error {
+func createStep() *step.ActivateSSHKey {
 	logger := *localLogger.NewLogger()
 	writer := *filewriter.NewOsFileWriter()
 	osEnvManager := *envmanager.NewOsEnvManager()
 	envmanEnvManager := *envmanager.NewEnvmanEnvManager()
-	activateSSHKey := step.NewActivateSSHKey(step.NewEnvStepInputParser(), *step.NewCombinedEnvValueClearer(logger, osEnvManager, envmanEnvManager), envmanEnvManager, osEnvManager, writer, *sshkey.NewAgent(writer, sshkey.NewOsTempDirProvider(), logger, func(name string, args ...string) *sshkey.Command {
+	return step.NewActivateSSHKey(step.NewEnvStepInputParser(), *step.NewCombinedEnvValueClearer(logger, osEnvManager, envmanEnvManager), envmanEnvManager, osEnvManager, writer, *sshkey.NewAgent(writer, sshkey.NewOsTempDirProvider(), logger, func(name string, args ...string) *sshkey.Command {
 		var c sshkey.Command
 		c = utilcommand.New(name, args...)
 		return &c
 	}), logger)
-	processConfig, err := activateSSHKey.ProcessConfig()
+}
+
+func run() error {
+	step := createStep()
+	config, err := step.ProcessConfig()
 	if err != nil {
 		return err
 	}
-	result, err := activateSSHKey.Run(processConfig)
+	result, err := step.Run(config)
 	if err != nil {
 		return err
 	}
-	if err := activateSSHKey.Export(result); err != nil {
+	if err := step.Export(result); err != nil {
 		return err
 	}
 	return nil
