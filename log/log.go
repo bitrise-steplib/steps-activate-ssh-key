@@ -6,8 +6,9 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
-// TODO: Utility
+// TODO: Move to `go-utils`
 
+// Logger ...
 type Logger interface {
 	Printf(format string, v ...interface{})
 	Donef(format string, v ...interface{})
@@ -18,9 +19,9 @@ type Logger interface {
 type defaultLogger struct {
 }
 
-// NewLogger ...
-func NewLogger() Logger {
-	return &defaultLogger{}
+// NewDefaultLogger ...
+func NewDefaultLogger() Logger {
+	return defaultLogger{}
 }
 
 // Printf ...

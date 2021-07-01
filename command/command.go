@@ -6,9 +6,9 @@ import (
 	"github.com/bitrise-io/go-utils/command"
 )
 
-// TODO: move to a util lib
+// TODO: Move to `go-utils`
 
-//Command ...
+// Command ...
 type Command interface {
 	PrintableCommandArgs() string
 	RunAndReturnTrimmedOutput() (string, error)
@@ -18,8 +18,8 @@ type Command interface {
 	Run() error
 }
 
-// CommandFactory ...
-type CommandFactory func(name string, args ...string) Command
+// Factory ...
+type Factory func(name string, args ...string) Command
 
 // NewCommand ...
 func NewCommand(name string, args ...string) Command {

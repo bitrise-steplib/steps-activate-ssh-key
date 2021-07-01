@@ -7,7 +7,7 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 )
 
-// TODO: utility
+// TODO: Move to `go-utils`
 
 // FileWriter ...
 type FileWriter interface {
@@ -18,7 +18,7 @@ type osFileWriter struct{}
 
 // NewOsFileWriter ...
 func NewOsFileWriter() FileWriter {
-	return &osFileWriter{}
+	return osFileWriter{}
 }
 
 // Write ...

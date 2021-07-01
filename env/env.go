@@ -6,8 +6,9 @@ import (
 	"github.com/bitrise-io/go-steputils/tools"
 )
 
-// TODO: go-steputils
+// TODO: Move to `go-utils`
 
+// OsRepository ...
 type OsRepository interface {
 	Unset(key string) error
 	Set(key string, value string) error
@@ -16,26 +17,29 @@ type OsRepository interface {
 
 type osRepository struct{}
 
-//NewOsEnvManager ...
-func NewOsEnvManager() OsRepository {
-	return &osRepository{}
+// NewOsRepository ...
+func NewOsRepository() OsRepository {
+	return osRepository{}
 }
 
-//List ...
+// List ...
 func (m osRepository) List() []string {
 	return os.Environ()
 }
 
-//Unset ...
+// Unset ...
 func (m osRepository) Unset(key string) error {
 	return os.Unsetenv(key)
 }
 
-//Set ...
+// Set ...
 func (m osRepository) Set(key string, value string) error {
 	return os.Setenv(key, value)
 }
 
+// TODO: Move to `go-steputils`
+
+// EnvmanRepository ...
 type EnvmanRepository interface {
 	Unset(key string) error
 	Set(key string, value string) error
@@ -43,17 +47,17 @@ type EnvmanRepository interface {
 
 type envmanRepository struct{}
 
-//NewEnvmanEnvManager ...
-func NewEnvmanEnvManager() EnvmanRepository {
-	return &envmanRepository{}
+// NewEnvmanRepository ...
+func NewEnvmanRepository() EnvmanRepository {
+	return envmanRepository{}
 }
 
-//Unset ...
+// Unset ...
 func (e envmanRepository) Unset(key string) error {
 	return tools.ExportEnvironmentWithEnvman(key, "")
 }
 
-//Set ...
+// Set ...
 func (e envmanRepository) Set(key string, value string) error {
 	return tools.ExportEnvironmentWithEnvman(key, value)
 }

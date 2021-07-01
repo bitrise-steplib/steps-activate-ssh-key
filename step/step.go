@@ -2,6 +2,7 @@ package step
 
 import (
 	"fmt"
+	"github.com/bitrise-io/go-steputils/step"
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
@@ -12,7 +13,7 @@ import (
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 )
 
-//Input ...
+// Input ...
 type Input struct {
 	SSHRsaPrivateKey        stepconf.Secret `env:"ssh_rsa_private_key,required"`
 	SSHKeySavePath          string          `env:"ssh_key_save_path,required"`
@@ -20,7 +21,7 @@ type Input struct {
 	Verbose                 bool            `env:"verbose"`
 }
 
-//Config ...
+// Config ...
 type Config struct {
 	sshRsaPrivateKey        stepconf.Secret
 	sshKeySavePath          string
@@ -28,25 +29,25 @@ type Config struct {
 	verbose                 bool
 }
 
-//Result ...
+// Result ...
 type Result struct {
 	sshAuthSock string
 }
 
-type stepInputParser interface {
+// InputParser ...
+type InputParser interface {
 	Parse() (Input, error)
 }
 
-//EnvStepInputParser ...
-type EnvStepInputParser struct{}
+type envInputParser struct{}
 
-// NewEnvStepInputParser ...
-func NewEnvStepInputParser() *EnvStepInputParser {
-	return &EnvStepInputParser{}
+// NewEnvInputParser ...
+func NewEnvInputParser() InputParser {
+	return envInputParser{}
 }
 
-//Parse ...
-func (EnvStepInputParser) Parse() (Input, error) {
+// Parse ...
+func (envInputParser) Parse() (Input, error) {
 	var i Input
 	if err := stepconf.Parse(&i); err != nil {
 		return Input{}, err
@@ -54,25 +55,25 @@ func (EnvStepInputParser) Parse() (Input, error) {
 	return i, nil
 }
 
-//ActivateSSHKey ...
+// ActivateSSHKey ...
 type ActivateSSHKey struct {
-	stepInputParse      stepInputParser
+	stepInputParser     InputParser
 	envValueClearer     CombinedEnvValueClearer
 	envmanEnvRepository env.EnvmanRepository
 	osEnvRepository     env.OsRepository
 	fileWriter          filewriter.FileWriter
-	agent               sshkey.Agent
+	sshKeyAgent         sshkey.Agent
 	logger              log.Logger
 }
 
-//NewActivateSSHKey ...
-func NewActivateSSHKey(stepInputParse stepInputParser, envValueClearer CombinedEnvValueClearer, envmanEnvRepository env.EnvmanRepository, osEnvRepository env.OsRepository, fileWriter filewriter.FileWriter, agent sshkey.Agent, logger log.Logger) *ActivateSSHKey {
-	return &ActivateSSHKey{stepInputParse: stepInputParse, envValueClearer: envValueClearer, envmanEnvRepository: envmanEnvRepository, osEnvRepository: osEnvRepository, fileWriter: fileWriter, agent: agent, logger: logger}
+// NewActivateSSHKey ...
+func NewActivateSSHKey(stepInputParse InputParser, envValueClearer CombinedEnvValueClearer, envmanEnvRepository env.EnvmanRepository, osEnvRepository env.OsRepository, fileWriter filewriter.FileWriter, agent sshkey.Agent, logger log.Logger) *ActivateSSHKey {
+	return &ActivateSSHKey{stepInputParser: stepInputParse, envValueClearer: envValueClearer, envmanEnvRepository: envmanEnvRepository, osEnvRepository: osEnvRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
 }
 
 // ProcessConfig ...
 func (a ActivateSSHKey) ProcessConfig() (Config, error) {
-	input, err := a.stepInputParse.Parse()
+	input, err := a.stepInputParser.Parse()
 	if err != nil {
 		return Config{}, err
 	}
@@ -106,8 +107,7 @@ func (a ActivateSSHKey) Run(cfg Config) (Result, error) {
 // Export ...
 func (a ActivateSSHKey) Export(result Result) error {
 	authSock := result.sshAuthSock
-	// NOTE: authSock == ""
-	if len(authSock) < 1 {
+	if authSock == "" {
 		return nil
 	}
 	if err := a.envmanEnvRepository.Set("SSH_AUTH_SOCK", authSock); err != nil {
@@ -148,7 +148,7 @@ func (a ActivateSSHKey) activate(path string, privateKey string, isRemoveOtherId
 		)
 	}
 
-	if err := a.agent.AddKey(path); err != nil {
+	if err := a.sshKeyAgent.AddKey(path); err != nil {
 		return result, newStepError(
 			"ssh_key_requires_passphrase",
 			fmt.Errorf("SSH key requires passphrase: %v", err),
@@ -160,7 +160,7 @@ func (a ActivateSSHKey) activate(path string, privateKey string, isRemoveOtherId
 
 func (a ActivateSSHKey) restartAgent(removeOtherIdentities bool) (string, error) {
 	var shouldStartNewAgent bool
-	returnValue, err := a.agent.ListKeys()
+	returnValue, err := a.sshKeyAgent.ListKeys()
 	if err != nil {
 		a.logger.Debugf("Exit code: %s", err)
 	}
@@ -176,11 +176,11 @@ func (a ActivateSSHKey) restartAgent(removeOtherIdentities bool) (string, error)
 		a.logger.Printf("ssh_agent_check_result: %d", returnValue)
 		fmt.Printf("running / accessible ssh-agent detected")
 		if removeOtherIdentities {
-			if err := a.agent.DeleteKeys(); err != nil {
+			if err := a.sshKeyAgent.DeleteKeys(); err != nil {
 				return "", err
 			}
 
-			returnValue, err := a.agent.Kill()
+			returnValue, err := a.sshKeyAgent.Kill()
 			if err != nil {
 				a.logger.Printf("Exit code: %s", err)
 			}
@@ -192,7 +192,7 @@ func (a ActivateSSHKey) restartAgent(removeOtherIdentities bool) (string, error)
 	}
 
 	if shouldStartNewAgent {
-		returnValue, err := a.agent.Start()
+		returnValue, err := a.sshKeyAgent.Start()
 		if err != nil {
 			a.logger.Debugf("Exit code: %s", err)
 		}
@@ -209,4 +209,8 @@ func (a ActivateSSHKey) restartAgent(removeOtherIdentities bool) (string, error)
 		return returnValue, nil
 	}
 	return "", nil
+}
+
+func newStepError(tag string, err error, shortMsg string) *step.Error {
+	return step.NewError("activate-ssh-key", tag, err, shortMsg)
 }

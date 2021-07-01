@@ -2,6 +2,7 @@ package sshkey
 
 import (
 	"fmt"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/pathutil"
 	"os"
 	"path/filepath"
 
@@ -10,20 +11,16 @@ import (
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 )
 
-type tempDirProvider interface {
-	CreateTempDir(prefix string) (string, error)
-}
-
 // Agent ...
 type Agent struct {
 	fileWriter      filewriter.FileWriter
-	tempDirProvider tempDirProvider
+	tempDirProvider pathutil.TempDirProvider
 	logger          log.Logger
-	commandFactory  command.CommandFactory
+	commandFactory  command.Factory
 }
 
 // NewAgent ...
-func NewAgent(fileWriter filewriter.FileWriter, tempDirProvider tempDirProvider, logger log.Logger, commandFactory command.CommandFactory) *Agent {
+func NewAgent(fileWriter filewriter.FileWriter, tempDirProvider pathutil.TempDirProvider, logger log.Logger, commandFactory command.Factory) *Agent {
 	return &Agent{fileWriter: fileWriter, tempDirProvider: tempDirProvider, logger: logger, commandFactory: commandFactory}
 }
 

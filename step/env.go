@@ -7,22 +7,22 @@ import (
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 )
 
-//CombinedEnvValueClearer ...
+// CombinedEnvValueClearer ...
 type CombinedEnvValueClearer struct {
 	logger              log.Logger
 	osEnvRepository     env.OsRepository
 	envmanEnvRepository env.EnvmanRepository
 }
 
-//NewCombinedEnvValueClearer ...
+// NewCombinedEnvValueClearer ...
 func NewCombinedEnvValueClearer(logger log.Logger, osEnvRepository env.OsRepository, envmanEnvRepository env.EnvmanRepository) *CombinedEnvValueClearer {
 	return &CombinedEnvValueClearer{logger: logger, osEnvRepository: osEnvRepository, envmanEnvRepository: envmanEnvRepository}
 }
 
-//UnsetByValue ...
+// UnsetByValue ...
 func (o CombinedEnvValueClearer) UnsetByValue(value string) error {
-	for _, env := range o.osEnvRepository.List() {
-		key, val := splitEnv(env)
+	for _, e := range o.osEnvRepository.List() {
+		key, val := splitEnv(e)
 
 		if val == value {
 			if err := o.osEnvRepository.Unset(key); err != nil {

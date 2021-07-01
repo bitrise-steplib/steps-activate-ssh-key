@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/bitrise-steplib/steps-activate-ssh-key/pathutil"
 	"os"
 
 	"github.com/bitrise-io/go-utils/log"
@@ -20,31 +21,33 @@ func main() {
 }
 
 func run() error {
-	step := createStep()
-	config, err := step.ProcessConfig()
+	activateSSHKey := createActivateSSHKey()
+	config, err := activateSSHKey.ProcessConfig()
 	if err != nil {
 		return err
 	}
-	result, err := step.Run(config)
+	result, err := activateSSHKey.Run(config)
 	if err != nil {
 		return err
 	}
-	if err := step.Export(result); err != nil {
+	if err := activateSSHKey.Export(result); err != nil {
 		return err
 	}
 	return nil
 }
 
-func createStep() *step.ActivateSSHKey {
-	logger := localLogger.NewLogger()
-	writer := filewriter.NewOsFileWriter()
-	osEnvRepository := env.NewOsEnvManager()
-	envmanEnvRepository := env.NewEnvmanEnvManager()
-	stepInputParser := step.NewEnvStepInputParser()
-	combinedEnvValueClearer := step.NewCombinedEnvValueClearer(logger, osEnvRepository, envmanEnvRepository)
-	tempDirProvider := sshkey.NewOsTempDirProvider()
-	cmdFactory := command.NewCommand
-	agent := sshkey.NewAgent(writer, tempDirProvider, logger, cmdFactory)
+func createActivateSSHKey() *step.ActivateSSHKey {
+	stepInputParser := step.NewEnvInputParser()
 
-	return step.NewActivateSSHKey(stepInputParser, *combinedEnvValueClearer, envmanEnvRepository, osEnvRepository, writer, *agent, logger)
+	logger := localLogger.NewDefaultLogger()
+	osEnvRepository := env.NewOsRepository()
+	envmanEnvRepository := env.NewEnvmanRepository()
+	envValueClearer := step.NewCombinedEnvValueClearer(logger, osEnvRepository, envmanEnvRepository)
+
+	fileWriter := filewriter.NewOsFileWriter()
+	tempDirProvider := pathutil.NewOsTempDirProvider()
+	commandFactory := command.NewCommand
+	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, commandFactory)
+
+	return step.NewActivateSSHKey(stepInputParser, *envValueClearer, envmanEnvRepository, osEnvRepository, fileWriter, *agent, logger)
 }
