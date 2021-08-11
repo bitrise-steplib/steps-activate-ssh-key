@@ -128,7 +128,7 @@ func (a ActivateSSHKey) clearSSHKeys(privateKey string) error {
 }
 
 func (a ActivateSSHKey) activate(path string, privateKey string, isRemoveOtherIdentities bool) (string, error) {
-	// OpenSSH_8.1p1 on macOS requires a newline at at the end of
+	// OpenSSH_8.1p1 on macOS requires a newline at the end of
 	// private key using the new format (starting with -----BEGIN OPENSSH PRIVATE KEY-----).
 	// See https://www.openssh.com/txt/release-7.8 for new format description.
 	if err := a.fileWriter.Write(path, privateKey+"\n", 0600); err != nil {

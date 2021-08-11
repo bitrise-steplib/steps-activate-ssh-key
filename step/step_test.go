@@ -1,6 +1,8 @@
 package step
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
@@ -18,7 +20,8 @@ func Test_SSHPrivateKeyRemoved(t *testing.T) {
 	fileWriter := createFileWriter()
 	logger := createLogger()
 	tempDirProvider := createTempProvider()
-	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider)
+	mockCommand := createCommand()
+	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, mockCommand)
 	config := createConfigWithDefaults()
 
 	output, err := activateSSHKey.Run(config)
@@ -29,6 +32,37 @@ func Test_SSHPrivateKeyRemoved(t *testing.T) {
 	osEnvRepository.AssertCalled(t, "Unset", envKey)
 	osEnvManager.AssertNumberOfCalls(t, "Unset", 1)
 	osEnvManager.AssertCalled(t, "Unset", envKey)
+}
+
+func Test_ErrorRaisedIfSSHAddFails(t *testing.T) {
+	osEnvRepository := createOsEnvRepositoryWithSSHKey()
+	osEnvManager := createEnvmanEnvRepository()
+	fileWriter := createFileWriter()
+	logger := createLogger()
+	tempDirProvider := createTempProvider()
+
+	mockCommand := new(MockCommand)
+	mockCommand.On("RunAndReturnExitCode", mock.Anything).Return(1, errors.New("mocked error"))
+	mockCommand.On("RunAndReturnTrimmedOutput", mock.Anything).Return("", nil)
+	mockCommand.On("Run", mock.Anything).Return(nil)
+	mockCommand.On("PrintableCommandArgs").Return("")
+	mockCommand.On("SetStdout", mock.Anything).Return(nil)
+	mockCommand.On("SetStderr", mock.Anything).Return(nil)
+
+	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, mockCommand)
+	config := createConfigWithDefaults()
+
+	output, err := activateSSHKey.Run(config)
+
+	wantOutput := Result{sshAuthSock: ""}
+	wantErr := newStepError(
+		"ssh_key_requires_passphrase",
+		fmt.Errorf("SSH key requires passphrase: %v", errors.New("failed to add the SSH key to ssh-agent with an empty passphrase")),
+		"SSH key requires passphrase",
+	)
+	assert.Equal(t, wantOutput, output)
+	assert.Error(t, err)
+	assert.Equal(t, wantErr, err)
 }
 
 func createOsEnvRepositoryWithSSHKey() (osEnvRepository *MockOsRepository) {
@@ -68,7 +102,7 @@ func createTempProvider() (tempDirProvider *MockTempDirProvider) {
 	return
 }
 
-func prepareDefaultCommand() (command *MockCommand) {
+func createCommand() (command *MockCommand) {
 	command = new(MockCommand)
 	command.On("RunAndReturnExitCode", mock.Anything).Return(0, nil)
 	command.On("RunAndReturnTrimmedOutput", mock.Anything).Return("", nil)
@@ -79,7 +113,7 @@ func prepareDefaultCommand() (command *MockCommand) {
 	return
 }
 
-func createActivateSSHKey(osEnvRepository *MockOsRepository, envmanEnvRepository *MockEnvmanRepository, fileWriter *MockFileWriter, logger *MockLogger, tempDirProvider *MockTempDirProvider) *ActivateSSHKey {
+func createActivateSSHKey(osEnvRepository *MockOsRepository, envmanEnvRepository *MockEnvmanRepository, fileWriter *MockFileWriter, logger *MockLogger, tempDirProvider *MockTempDirProvider, mockCommand *MockCommand) *ActivateSSHKey {
 	return &ActivateSSHKey{
 		stepInputParser:     nil,
 		envmanEnvRepository: envmanEnvRepository,
@@ -87,8 +121,7 @@ func createActivateSSHKey(osEnvRepository *MockOsRepository, envmanEnvRepository
 		envValueClearer:     *NewCombinedEnvValueClearer(logger, osEnvRepository, envmanEnvRepository),
 		fileWriter:          fileWriter,
 		sshKeyAgent: *sshkey.NewAgent(fileWriter, tempDirProvider, logger, func(name string, args ...string) command.Command {
-			var c command.Command = prepareDefaultCommand()
-			return c
+			return mockCommand
 		}),
 		logger: logger,
 	}
