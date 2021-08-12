@@ -20,8 +20,8 @@ func Test_SSHPrivateKeyRemoved(t *testing.T) {
 	fileWriter := createFileWriter()
 	logger := createLogger()
 	tempDirProvider := createTempProvider()
-	mockCommand := createCommand()
-	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, mockCommand)
+	commandFactory := func(name string, args ...string) command.Command { return createCommand() }
+	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, commandFactory)
 	config := createConfigWithDefaults()
 
 	output, err := activateSSHKey.Run(config)
@@ -41,15 +41,20 @@ func Test_ErrorRaisedIfSSHAddFails(t *testing.T) {
 	logger := createLogger()
 	tempDirProvider := createTempProvider()
 
-	mockCommand := new(MockCommand)
-	mockCommand.On("RunAndReturnExitCode", mock.Anything).Return(1, errors.New("mocked error"))
-	mockCommand.On("RunAndReturnTrimmedOutput", mock.Anything).Return("", nil)
-	mockCommand.On("Run", mock.Anything).Return(nil)
-	mockCommand.On("PrintableCommandArgs").Return("")
-	mockCommand.On("SetStdout", mock.Anything).Return(nil)
-	mockCommand.On("SetStderr", mock.Anything).Return(nil)
+	mockCommand := createCommand()
+	failingMockCommand := new(MockCommand)
+	failingMockCommand.On("RunAndReturnExitCode").Return(1, errors.New("mocked error"))
+	failingMockCommand.On("SetStdout", mock.Anything).Return(nil)
+	failingMockCommand.On("SetStderr", mock.Anything).Return(nil)
+	failingMockCommand.On("PrintableCommandArgs").Return("")
+	commandFactory := func(name string, args ...string) command.Command {
+		if name == "bash" && args[0] == "-c" {
+			return failingMockCommand
+		}
+		return mockCommand
+	}
 
-	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, mockCommand)
+	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, commandFactory)
 	config := createConfigWithDefaults()
 
 	output, err := activateSSHKey.Run(config)
@@ -113,17 +118,15 @@ func createCommand() (command *MockCommand) {
 	return
 }
 
-func createActivateSSHKey(osEnvRepository *MockOsRepository, envmanEnvRepository *MockEnvmanRepository, fileWriter *MockFileWriter, logger *MockLogger, tempDirProvider *MockTempDirProvider, mockCommand *MockCommand) *ActivateSSHKey {
+func createActivateSSHKey(osEnvRepository *MockOsRepository, envmanEnvRepository *MockEnvmanRepository, fileWriter *MockFileWriter, logger *MockLogger, tempDirProvider *MockTempDirProvider, commandFactory command.Factory) *ActivateSSHKey {
 	return &ActivateSSHKey{
 		stepInputParser:     nil,
 		envmanEnvRepository: envmanEnvRepository,
 		osEnvRepository:     osEnvRepository,
 		envValueClearer:     *NewCombinedEnvValueClearer(logger, osEnvRepository, envmanEnvRepository),
 		fileWriter:          fileWriter,
-		sshKeyAgent: *sshkey.NewAgent(fileWriter, tempDirProvider, logger, func(name string, args ...string) command.Command {
-			return mockCommand
-		}),
-		logger: logger,
+		sshKeyAgent:         *sshkey.NewAgent(fileWriter, tempDirProvider, logger, commandFactory),
+		logger:              logger,
 	}
 }
 
