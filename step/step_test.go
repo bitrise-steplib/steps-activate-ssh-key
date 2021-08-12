@@ -40,19 +40,7 @@ func Test_ErrorRaisedIfSSHAddFails(t *testing.T) {
 	fileWriter := createFileWriter()
 	logger := createLogger()
 	tempDirProvider := createTempProvider()
-
-	mockCommand := createCommand()
-	failingMockCommand := new(MockCommand)
-	failingMockCommand.On("RunAndReturnExitCode").Return(1, errors.New("mocked error"))
-	failingMockCommand.On("SetStdout", mock.Anything).Return(nil)
-	failingMockCommand.On("SetStderr", mock.Anything).Return(nil)
-	failingMockCommand.On("PrintableCommandArgs").Return("")
-	commandFactory := func(name string, args ...string) command.Command {
-		if name == "bash" && args[0] == "-c" {
-			return failingMockCommand
-		}
-		return mockCommand
-	}
+	commandFactory := createCommandFactoryWithFailingSSHAdd()
 
 	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, commandFactory)
 	config := createConfigWithDefaults()
@@ -116,6 +104,21 @@ func createCommand() (command *MockCommand) {
 	command.On("SetStdout", mock.Anything).Return(nil)
 	command.On("SetStderr", mock.Anything).Return(nil)
 	return
+}
+
+func createCommandFactoryWithFailingSSHAdd() command.Factory {
+	mockCommand := createCommand()
+	failingMockCommand := new(MockCommand)
+	failingMockCommand.On("RunAndReturnExitCode").Return(1, errors.New("mocked error"))
+	failingMockCommand.On("SetStdout", mock.Anything).Return(nil)
+	failingMockCommand.On("SetStderr", mock.Anything).Return(nil)
+	failingMockCommand.On("PrintableCommandArgs").Return("")
+	return func(name string, args ...string) command.Command {
+		if name == "bash" && args[0] == "-c" {
+			return failingMockCommand
+		}
+		return mockCommand
+	}
 }
 
 func createActivateSSHKey(osEnvRepository *MockOsRepository, envmanEnvRepository *MockEnvmanRepository, fileWriter *MockFileWriter, logger *MockLogger, tempDirProvider *MockTempDirProvider, commandFactory command.Factory) *ActivateSSHKey {
