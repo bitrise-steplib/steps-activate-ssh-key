@@ -5,11 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bitrise-steplib/steps-activate-ssh-key/pathutil"
-
 	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/filewriter"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/pathutil"
 )
 
 // Agent ...
