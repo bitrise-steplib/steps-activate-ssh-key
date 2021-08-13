@@ -16,7 +16,7 @@ func TestAgent_AddKey(t *testing.T) {
 
 	sshKeyPth := "ssh-key-path"
 	tmpDir := "temp-dir"
-	sshAddScriptPth := filepath.Join(tmpDir, "tmp_spawn.sh")
+	sshAddScriptPth := filepath.Join(tmpDir, addSSHKeyScriptFileName)
 
 	tempDirProvider := new(MockTempDirProvider)
 	tempDirProvider.On("CreateTempDir", mock.Anything).Return(tmpDir, nil).Once()

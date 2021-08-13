@@ -74,6 +74,8 @@ exit 1
 fi`, sshKeyPth)
 }
 
+const addSSHKeyScriptFileName = "tmp_spawn.sh"
+
 // AddKey ...
 func (a Agent) AddKey(sshKeyPth string) error {
 	pth, err := a.tempDirProvider.CreateTempDir("spawn")
@@ -81,7 +83,7 @@ func (a Agent) AddKey(sshKeyPth string) error {
 		return err
 	}
 
-	filePth := filepath.Join(pth, "tmp_spawn.sh")
+	filePth := filepath.Join(pth, addSSHKeyScriptFileName)
 	if err := a.fileWriter.Write(filePth, createAddSSHKeyScript(sshKeyPth), 0770); err != nil {
 		return fmt.Errorf("failed to write the SSH key to the provided path, %s", err)
 	}
