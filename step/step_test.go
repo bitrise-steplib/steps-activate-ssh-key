@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -13,6 +14,35 @@ import (
 
 const privateKey = "test-key"
 const envKey = "env-key"
+
+func Test_SSHKeyAdded_IfAgentRestarted(t *testing.T) {
+	config := createConfigWithDefaults()
+
+	logger := log.NewDefaultLogger()
+
+	osEnvRepository := new(MockOsRepository)
+	osEnvRepository.On("Set", mock.Anything, mock.Anything).Return(nil)
+
+	envValueClearer := new(MockEnvValueClearer)
+	envValueClearer.On("UnsetByValue", mock.Anything).Return(nil)
+
+	fileWriter := new(MockFileWriter)
+	fileWriter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	tempDirProvider := new(MockTempDirProvider)
+	tempDirProvider.On("CreateTempDir", mock.Anything).Return("temp-dir", nil)
+
+	sshKeyAgent := new(MockSSHKeyAgent)
+	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
+	sshKeyAgent.On("Start").Return("", nil)
+	sshKeyAgent.On("AddKey", mock.Anything).Return(nil).Once()
+
+	step := NewActivateSSHKey(nil, envValueClearer, nil, osEnvRepository, fileWriter, sshKeyAgent, logger)
+
+	_, err := step.Run(config)
+
+	assert.NoError(t, err)
+}
 
 func Test_SSHPrivateKeyRemoved(t *testing.T) {
 	osEnvRepository := createOsEnvRepositoryWithSSHKey()

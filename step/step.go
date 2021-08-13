@@ -2,15 +2,14 @@ package step
 
 import (
 	"fmt"
-	"github.com/bitrise-io/go-steputils/step"
 	"strings"
 
+	"github.com/bitrise-io/go-steputils/step"
 	"github.com/bitrise-io/go-steputils/stepconf"
 	globallog "github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/env"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/filewriter"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 )
 
 // Input ...
@@ -55,19 +54,33 @@ func (envInputParser) Parse() (Input, error) {
 	return i, nil
 }
 
+// SSHKeyAgent ...
+type SSHKeyAgent interface {
+	Start() (string, error)
+	Kill() (int, error)
+	ListKeys() (int, error)
+	AddKey(sshKeyPth string) error
+	DeleteKeys() error
+}
+
+// EnvValueClearer ...
+type EnvValueClearer interface {
+	UnsetByValue(value string) error
+}
+
 // ActivateSSHKey ...
 type ActivateSSHKey struct {
 	stepInputParser     InputParser
-	envValueClearer     CombinedEnvValueClearer
+	envValueClearer     EnvValueClearer
 	envmanEnvRepository env.EnvmanRepository
 	osEnvRepository     env.OsRepository
 	fileWriter          filewriter.FileWriter
-	sshKeyAgent         sshkey.Agent
+	sshKeyAgent         SSHKeyAgent
 	logger              log.Logger
 }
 
 // NewActivateSSHKey ...
-func NewActivateSSHKey(stepInputParse InputParser, envValueClearer CombinedEnvValueClearer, envmanEnvRepository env.EnvmanRepository, osEnvRepository env.OsRepository, fileWriter filewriter.FileWriter, agent sshkey.Agent, logger log.Logger) *ActivateSSHKey {
+func NewActivateSSHKey(stepInputParse InputParser, envValueClearer EnvValueClearer, envmanEnvRepository env.EnvmanRepository, osEnvRepository env.OsRepository, fileWriter filewriter.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
 	return &ActivateSSHKey{stepInputParser: stepInputParse, envValueClearer: envValueClearer, envmanEnvRepository: envmanEnvRepository, osEnvRepository: osEnvRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
 }
 
@@ -127,11 +140,11 @@ func (a ActivateSSHKey) clearSSHKeys(privateKey string) error {
 	return nil
 }
 
-func (a ActivateSSHKey) activate(path string, privateKey string, isRemoveOtherIdentities bool) (string, error) {
+func (a ActivateSSHKey) activate(privateKeyPath, privateKey string, isRemoveOtherIdentities bool) (string, error) {
 	// OpenSSH_8.1p1 on macOS requires a newline at the end of
 	// private key using the new format (starting with -----BEGIN OPENSSH PRIVATE KEY-----).
 	// See https://www.openssh.com/txt/release-7.8 for new format description.
-	if err := a.fileWriter.Write(path, privateKey+"\n", 0600); err != nil {
+	if err := a.fileWriter.Write(privateKeyPath, privateKey+"\n", 0600); err != nil {
 		return "", newStepError(
 			"writing_ssh_key_failed",
 			fmt.Errorf("failed to write SSH key: %v", err),
@@ -148,7 +161,7 @@ func (a ActivateSSHKey) activate(path string, privateKey string, isRemoveOtherId
 		)
 	}
 
-	if err := a.sshKeyAgent.AddKey(path); err != nil {
+	if err := a.sshKeyAgent.AddKey(privateKeyPath); err != nil {
 		return result, newStepError(
 			"ssh_key_requires_passphrase",
 			fmt.Errorf("SSH key requires passphrase: %v", err),
@@ -159,12 +172,12 @@ func (a ActivateSSHKey) activate(path string, privateKey string, isRemoveOtherId
 }
 
 func (a ActivateSSHKey) restartAgent(removeOtherIdentities bool) (string, error) {
-	var shouldStartNewAgent bool
 	returnValue, err := a.sshKeyAgent.ListKeys()
 	if err != nil {
 		a.logger.Debugf("Exit code: %s", err)
 	}
 
+	shouldStartNewAgent := false
 	//  as stated in the man page (https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/ssh-add.1.html)
 	//  ssh-add returns the exit code 2 if it could not connect to the ssh-agent
 	if returnValue == 2 {
