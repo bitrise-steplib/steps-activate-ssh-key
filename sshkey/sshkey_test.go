@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
+
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -24,20 +25,17 @@ func TestAgent_AddKey(t *testing.T) {
 	fileWriter := new(MockFileWriter)
 	fileWriter.On("Write", sshAddScriptPth, createAddSSHKeyScript(sshKeyPth), mock.Anything).Return(nil).Once()
 
-	cmd := new(MockCommand)
+	cmd := new(MockRunnable)
 	cmd.On("RunAndReturnExitCode").Return(0, nil).Once()
-	cmd.On("SetStdout", os.Stdout).Return(nil).Once()
-	cmd.On("SetStderr", os.Stderr).Return(nil).Once()
 	cmd.On("PrintableCommandArgs").Return("").Once()
-	cmdFactory := func(name string, args ...string) command.Command {
-		if len(args) == 2 && name == "bash" && args[0] == "-c" && args[1] == sshAddScriptPth {
-			return cmd
-		}
-		t.Fatalf("Unknown command")
-		return nil
-	}
 
-	agent := NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
+	cmdBuilder := new(MockCommandBuilder)
+	cmdBuilder.On("Command", "bash", []string{"-c", sshAddScriptPth}, command.Opts{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}).Return(cmd)
+
+	agent := NewAgent(fileWriter, tempDirProvider, logger, cmdBuilder)
 	err := agent.AddKey(sshKeyPth)
 	assert.NoError(t, err)
 
