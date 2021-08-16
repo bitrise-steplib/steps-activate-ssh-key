@@ -15,7 +15,8 @@ import (
 const privateKey = "test-key"
 const envKey = "env-key"
 
-func Test_SSHKeyAdded_IfAgentRestarted(t *testing.T) {
+func TestStepRun_IfAgentRestarted_SSHKeyAdded(t *testing.T) {
+	// Given Simple Activate SSH Key step
 	config := createConfigWithDefaults()
 
 	logger := log.NewDefaultLogger()
@@ -32,6 +33,7 @@ func Test_SSHKeyAdded_IfAgentRestarted(t *testing.T) {
 	tempDirProvider := new(MockTempDirProvider)
 	tempDirProvider.On("CreateTempDir", mock.Anything).Return("temp-dir", nil)
 
+	// When SSH Agent list keys fails and agent gets restarted
 	sshKeyAgent := new(MockSSHKeyAgent)
 	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
 	sshKeyAgent.On("Start").Return("", nil)
@@ -41,7 +43,9 @@ func Test_SSHKeyAdded_IfAgentRestarted(t *testing.T) {
 
 	_, err := step.Run(config)
 
+	// Then SSH Key gets activated
 	assert.NoError(t, err)
+	sshKeyAgent.AssertExpectations(t)
 }
 
 func Test_SSHPrivateKeyRemoved(t *testing.T) {
