@@ -12,7 +12,7 @@ import (
 type OsRepository interface {
 	Unset(key string) error
 	Set(key string, value string) error
-	List() []string
+	List() ([]string, error)
 }
 
 type osRepository struct{}
@@ -23,8 +23,8 @@ func NewOsRepository() OsRepository {
 }
 
 // List ...
-func (m osRepository) List() []string {
-	return os.Environ()
+func (m osRepository) List() ([]string, error) {
+	return os.Environ(), nil
 }
 
 // Unset ...

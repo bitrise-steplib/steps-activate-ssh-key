@@ -2,44 +2,90 @@ package step
 
 import (
 	"strings"
-
-	"github.com/bitrise-steplib/steps-activate-ssh-key/env"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 )
 
-// CombinedEnvValueClearer ...
-type CombinedEnvValueClearer struct {
-	logger              log.Logger
-	osEnvRepository     env.OsRepository
-	envmanEnvRepository env.EnvmanRepository
+func splitEnv(env string) (string, string) {
+	e := strings.Split(env, "=")
+	return e[0], strings.Join(e[1:], "=")
 }
 
-// NewCombinedEnvValueClearer ...
-func NewCombinedEnvValueClearer(logger log.Logger, osEnvRepository env.OsRepository, envmanEnvRepository env.EnvmanRepository) *CombinedEnvValueClearer {
-	return &CombinedEnvValueClearer{logger: logger, osEnvRepository: osEnvRepository, envmanEnvRepository: envmanEnvRepository}
+type EnvironmentManagerOrchestrator interface {
+	Set(key string, value string, setters ...Setter) error
+	Get(key string, getter Getter) (string, error)
+	GetKey(value string, lister Lister) (string, error)
+	List(lister Lister) ([]string, error)
+	Unset(key string, unSetters ...UnSetter) error
+	UnsetByValue(value string, byValueUnSetters ...ByValueUnSetter) error
 }
 
-// UnsetByValue ...
-func (o CombinedEnvValueClearer) UnsetByValue(value string) error {
-	for _, e := range o.osEnvRepository.List() {
-		key, val := splitEnv(e)
+type DefaultEnvironmentManagerOrchestrator struct{}
 
-		if val == value {
-			if err := o.osEnvRepository.Unset(key); err != nil {
-				return err
-			}
-
-			if err := o.envmanEnvRepository.Unset(key); err != nil {
-				return err
-			}
-
-			o.logger.Debugf("%s has been unset", key)
+func (DefaultEnvironmentManagerOrchestrator) Set(key string, value string, setters ...Setter) error {
+	for _, s := range setters {
+		if err := s.Set(key, value); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func splitEnv(env string) (string, string) {
-	e := strings.Split(env, "=")
-	return e[0], strings.Join(e[1:], "=")
+func (DefaultEnvironmentManagerOrchestrator) Get(key string, getter Getter) (string, error) {
+	return getter.Get(key)
+}
+
+func (DefaultEnvironmentManagerOrchestrator) GetKey(value string, lister Lister) (string, error) {
+	environment, err := lister.List()
+	if err != nil {
+		return "", err
+	}
+
+	for _, e := range environment {
+		key, val := splitEnv(e)
+		if val == value {
+			return key, nil
+		}
+	}
+	return "", nil
+}
+
+func (DefaultEnvironmentManagerOrchestrator) List(lister Lister) ([]string, error) {
+	return lister.List()
+}
+
+func (DefaultEnvironmentManagerOrchestrator) Unset(key string, unSetters ...UnSetter) error {
+	for _, s := range unSetters {
+		if err := s.Unset(key); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (DefaultEnvironmentManagerOrchestrator) UnsetByValue(value string, byValueUnSetters ...ByValueUnSetter) error {
+	for _, s := range byValueUnSetters {
+		if err := s.UnsetByValue(value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type Setter interface {
+	Set(key string, value string) error
+}
+
+type Getter interface {
+	Get(key string) (string, error)
+}
+
+type Lister interface {
+	List() ([]string, error)
+}
+
+type UnSetter interface {
+	Unset(value string) error
+}
+
+type ByValueUnSetter interface {
+	UnsetByValue(value string) error
 }
