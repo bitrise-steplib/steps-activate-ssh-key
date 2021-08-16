@@ -39,12 +39,12 @@ func createActivateSSHKey() *step.ActivateSSHKey {
 	stepInputParser := step.NewEnvInputParser()
 
 	logger := localLogger.NewDefaultLogger()
-	envManagerOrchestrator := step.DefaultEnvironmentManagerOrchestrator{}
+	envRepositoryOrchestrator := step.DefaultEnvironmentRepositoryOrchestrator{}
 
 	fileWriter := filewriter.NewOsFileWriter()
 	tempDirProvider := pathutil.NewOsTempDirProvider()
 	commandFactory := command.NewCommand
 	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, commandFactory)
 
-	return step.NewActivateSSHKey(stepInputParser, envManagerOrchestrator, fileWriter, *agent, logger)
+	return step.NewActivateSSHKey(stepInputParser, envRepositoryOrchestrator, fileWriter, *agent, logger)
 }

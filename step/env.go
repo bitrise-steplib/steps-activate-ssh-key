@@ -9,18 +9,20 @@ func splitEnv(env string) (string, string) {
 	return e[0], strings.Join(e[1:], "=")
 }
 
-type EnvironmentManagerOrchestrator interface {
+// EnvironmentRepositoryOrchestrator ...
+type EnvironmentRepositoryOrchestrator interface {
 	Set(key string, value string, setters ...Setter) error
 	Get(key string, getter Getter) (string, error)
 	GetKey(value string, lister Lister) (string, error)
 	List(lister Lister) ([]string, error)
 	Unset(key string, unSetters ...UnSetter) error
-	UnsetByValue(value string, byValueUnSetters ...ByValueUnSetter) error
 }
 
-type DefaultEnvironmentManagerOrchestrator struct{}
+// DefaultEnvironmentRepositoryOrchestrator ...
+type DefaultEnvironmentRepositoryOrchestrator struct{}
 
-func (DefaultEnvironmentManagerOrchestrator) Set(key string, value string, setters ...Setter) error {
+// Set ...
+func (DefaultEnvironmentRepositoryOrchestrator) Set(key string, value string, setters ...Setter) error {
 	for _, s := range setters {
 		if err := s.Set(key, value); err != nil {
 			return err
@@ -29,11 +31,13 @@ func (DefaultEnvironmentManagerOrchestrator) Set(key string, value string, sette
 	return nil
 }
 
-func (DefaultEnvironmentManagerOrchestrator) Get(key string, getter Getter) (string, error) {
+// Get ...
+func (DefaultEnvironmentRepositoryOrchestrator) Get(key string, getter Getter) (string, error) {
 	return getter.Get(key)
 }
 
-func (DefaultEnvironmentManagerOrchestrator) GetKey(value string, lister Lister) (string, error) {
+// GetKey ...
+func (DefaultEnvironmentRepositoryOrchestrator) GetKey(value string, lister Lister) (string, error) {
 	environment, err := lister.List()
 	if err != nil {
 		return "", err
@@ -48,11 +52,13 @@ func (DefaultEnvironmentManagerOrchestrator) GetKey(value string, lister Lister)
 	return "", nil
 }
 
-func (DefaultEnvironmentManagerOrchestrator) List(lister Lister) ([]string, error) {
+// List ...
+func (DefaultEnvironmentRepositoryOrchestrator) List(lister Lister) ([]string, error) {
 	return lister.List()
 }
 
-func (DefaultEnvironmentManagerOrchestrator) Unset(key string, unSetters ...UnSetter) error {
+// Unset ...
+func (DefaultEnvironmentRepositoryOrchestrator) Unset(key string, unSetters ...UnSetter) error {
 	for _, s := range unSetters {
 		if err := s.Unset(key); err != nil {
 			return err
@@ -61,31 +67,22 @@ func (DefaultEnvironmentManagerOrchestrator) Unset(key string, unSetters ...UnSe
 	return nil
 }
 
-func (DefaultEnvironmentManagerOrchestrator) UnsetByValue(value string, byValueUnSetters ...ByValueUnSetter) error {
-	for _, s := range byValueUnSetters {
-		if err := s.UnsetByValue(value); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
+// Setter ...
 type Setter interface {
 	Set(key string, value string) error
 }
 
+// Getter ...
 type Getter interface {
 	Get(key string) (string, error)
 }
 
+// Lister ...
 type Lister interface {
 	List() ([]string, error)
 }
 
+// UnSetter ...
 type UnSetter interface {
 	Unset(value string) error
-}
-
-type ByValueUnSetter interface {
-	UnsetByValue(value string) error
 }

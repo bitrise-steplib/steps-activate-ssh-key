@@ -20,11 +20,11 @@ func Test_SSHKeyAdded_IfAgentRestarted(t *testing.T) {
 
 	logger := log.NewDefaultLogger()
 
-	envManagerOrchestrator := new(MockEnvironmentManagerOrchestrator)
-	envManagerOrchestrator.On("GetKey", mock.Anything, mock.Anything).Return("", nil)
-	envManagerOrchestrator.On("Unset", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	//envManagerOrchestrator.On("Set", mock.Anything, mock.Anything, env.NewOsRepository()).Return(nil)
-	envManagerOrchestrator.On("Set", mock.Anything, mock.Anything, mock.AnythingOfType("env.osRepository")).Return(nil)
+	envRepositoryOrchestrator := new(MockEnvironmentRepositoryOrchestrator)
+	envRepositoryOrchestrator.On("GetKey", mock.Anything, mock.Anything).Return("", nil)
+	envRepositoryOrchestrator.On("Unset", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	//envRepositoryOrchestrator.On("Set", mock.Anything, mock.Anything, env.NewOsRepository()).Return(nil)
+	envRepositoryOrchestrator.On("Set", mock.Anything, mock.Anything, mock.AnythingOfType("env.osRepository")).Return(nil)
 
 	fileWriter := new(MockFileWriter)
 	fileWriter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -37,7 +37,7 @@ func Test_SSHKeyAdded_IfAgentRestarted(t *testing.T) {
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything).Return(nil).Once()
 
-	step := NewActivateSSHKey(nil, envManagerOrchestrator, fileWriter, sshKeyAgent, logger)
+	step := NewActivateSSHKey(nil, envRepositoryOrchestrator, fileWriter, sshKeyAgent, logger)
 
 	_, err := step.Run(config)
 
@@ -51,8 +51,8 @@ func Test_SSHPrivateKeyRemoved(t *testing.T) {
 	logger := createLogger()
 	tempDirProvider := createTempProvider()
 	commandFactory := func(name string, args ...string) command.Command { return createCommand() }
-	envManagerOrchestrator := new(EnvironmentManagerOrchestrator)
-	activateSSHKey := createActivateSSHKey(*envManagerOrchestrator, fileWriter, logger, tempDirProvider, commandFactory)
+	envRepositoryOrchestrator := new(MockEnvironmentRepositoryOrchestrator)
+	activateSSHKey := createActivateSSHKey(envRepositoryOrchestrator, fileWriter, logger, tempDirProvider, commandFactory)
 	config := createConfigWithDefaults()
 
 	output, err := activateSSHKey.Run(config)
@@ -73,8 +73,8 @@ func Test_ErrorRaisedIfSSHAddFails(t *testing.T) {
 	tempDirProvider := createTempProvider()
 	commandFactory := createCommandFactoryWithFailingSSHAdd()
 
-	envManagerOrchestrator := new(MockEnvironmentManagerOrchestrator)
-	activateSSHKey := createActivateSSHKey(envManagerOrchestrator, fileWriter, logger, tempDirProvider, commandFactory)
+	envRepositoryOrchestrator := new(MockEnvironmentRepositoryOrchestrator)
+	activateSSHKey := createActivateSSHKey(envRepositoryOrchestrator, fileWriter, logger, tempDirProvider, commandFactory)
 	config := createConfigWithDefaults()
 
 	output, err := activateSSHKey.Run(config)
@@ -153,13 +153,13 @@ func createCommandFactoryWithFailingSSHAdd() command.Factory {
 	}
 }
 
-func createActivateSSHKey(envManagerOrchestrator EnvironmentManagerOrchestrator, fileWriter *MockFileWriter, logger *MockLogger, tempDirProvider *MockTempDirProvider, commandFactory command.Factory) *ActivateSSHKey {
+func createActivateSSHKey(envRepositoryOrchestrator EnvironmentRepositoryOrchestrator, fileWriter *MockFileWriter, logger *MockLogger, tempDirProvider *MockTempDirProvider, commandFactory command.Factory) *ActivateSSHKey {
 	return &ActivateSSHKey{
-		stepInputParser:        nil,
-		envManagerOrchestrator: envManagerOrchestrator,
-		fileWriter:             fileWriter,
-		sshKeyAgent:            *sshkey.NewAgent(fileWriter, tempDirProvider, logger, commandFactory),
-		logger:                 logger,
+		stepInputParser:           nil,
+		envRepositoryOrchestrator: envRepositoryOrchestrator,
+		fileWriter:                fileWriter,
+		sshKeyAgent:               *sshkey.NewAgent(fileWriter, tempDirProvider, logger, commandFactory),
+		logger:                    logger,
 	}
 }
 
