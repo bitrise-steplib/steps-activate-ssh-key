@@ -8,6 +8,51 @@ import (
 
 // TODO: Move to `go-utils`
 
+// Repository ...
+type Repository interface {
+	Set(key, value string) error
+	Unset(key string) error
+	List() []string
+}
+
+// NewRepository ...
+func NewRepository(osRepository OsRepository, envmanRepository EnvmanRepository) Repository {
+	return defaultRepository{
+		osRepository:     osRepository,
+		envmanRepository: envmanRepository,
+	}
+}
+
+type defaultRepository struct {
+	osRepository     OsRepository
+	envmanRepository EnvmanRepository
+}
+
+// Set ...
+func (r defaultRepository) Set(key, value string) error {
+	if err := r.osRepository.Set(key, value); err != nil {
+		return err
+	}
+	if err := r.envmanRepository.Set(key, value); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r defaultRepository) Unset(key string) error {
+	if err := r.osRepository.Unset(key); err != nil {
+		return err
+	}
+	if err := r.envmanRepository.Unset(key); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r defaultRepository) List() []string {
+	return r.osRepository.List()
+}
+
 // OsRepository ...
 type OsRepository interface {
 	Unset(key string) error

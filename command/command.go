@@ -13,6 +13,7 @@ import (
 type Opts struct {
 	Stdout io.Writer
 	Stderr io.Writer
+	Env    []string
 }
 
 // Factory ...
@@ -33,6 +34,7 @@ func (b *defaultFactory) Create(name string, args []string, opts *Opts) Command 
 	if opts != nil {
 		cmd.Stdout = opts.Stdout
 		cmd.Stderr = opts.Stderr
+		cmd.Env = opts.Env
 	}
 	return defaultCommand{cmd}
 }

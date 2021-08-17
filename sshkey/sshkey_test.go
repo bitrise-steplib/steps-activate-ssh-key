@@ -35,7 +35,7 @@ func Test_WhenSSHKeyIsAdded_ThenItCallsSSHAddScript(t *testing.T) {
 	agent := NewAgent(fileWriter, tempDirProvider, logger, factory)
 
 	// When
-	err := agent.AddKey(sshKeyPth)
+	err := agent.AddKey(sshKeyPth, "socket")
 
 	// Then
 	assert.NoError(t, err)
@@ -43,5 +43,6 @@ func Test_WhenSSHKeyIsAdded_ThenItCallsSSHAddScript(t *testing.T) {
 	factory.AssertCalled(t, "Create", "bash", []string{"-c", sshAddScriptPth}, &command.Opts{
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
+		Env:    append(os.Environ(), "SSH_AUTH_SOCK=socket"),
 	})
 }
