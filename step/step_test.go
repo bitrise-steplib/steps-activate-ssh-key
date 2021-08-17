@@ -16,9 +16,7 @@ const privateKey = "test-key"
 const envKey = "env-key"
 
 func TestStepRun_IfAgentRestarted_SSHKeyAdded(t *testing.T) {
-	// Given Simple Activate SSH Key step
-	config := createConfigWithDefaults()
-
+	// Given
 	logger := log.NewDefaultLogger()
 
 	osEnvRepository := new(MockOsRepository)
@@ -33,7 +31,9 @@ func TestStepRun_IfAgentRestarted_SSHKeyAdded(t *testing.T) {
 	tempDirProvider := new(MockTempDirProvider)
 	tempDirProvider.On("CreateTempDir", mock.Anything).Return("temp-dir", nil)
 
-	// When SSH Agent list keys fails and agent gets restarted
+	config := createConfigWithDefaults()
+
+	// When
 	sshKeyAgent := new(MockSSHKeyAgent)
 	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
 	sshKeyAgent.On("Start").Return("", nil)
@@ -43,23 +43,26 @@ func TestStepRun_IfAgentRestarted_SSHKeyAdded(t *testing.T) {
 
 	_, err := step.Run(config)
 
-	// Then SSH Key gets activated
+	// Then
 	assert.NoError(t, err)
 	sshKeyAgent.AssertExpectations(t)
 }
 
 func Test_SSHPrivateKeyRemoved(t *testing.T) {
+	// Given
+	logger := createLogger()
 	osEnvRepository := createOsEnvRepositoryWithSSHKey()
 	osEnvManager := createEnvmanEnvRepository()
 	fileWriter := createFileWriter()
-	logger := createLogger()
 	tempDirProvider := createTempProvider()
 	commandFactory := func(name string, args ...string) command.Command { return createCommand() }
 	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, commandFactory)
 	config := createConfigWithDefaults()
 
+	// When
 	output, err := activateSSHKey.Run(config)
 
+	// Then
 	assert.NoError(t, err)
 	assert.Equal(t, output.sshAuthSock, "")
 	osEnvRepository.AssertNumberOfCalls(t, "Unset", 1)
@@ -69,18 +72,20 @@ func Test_SSHPrivateKeyRemoved(t *testing.T) {
 }
 
 func Test_ErrorRaisedIfSSHAddFails(t *testing.T) {
+	// Given
+	logger := createLogger()
 	osEnvRepository := createOsEnvRepositoryWithSSHKey()
 	osEnvManager := createEnvmanEnvRepository()
 	fileWriter := createFileWriter()
-	logger := createLogger()
 	tempDirProvider := createTempProvider()
-	commandFactory := createCommandFactoryWithFailingSSHAdd()
-
-	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, commandFactory)
 	config := createConfigWithDefaults()
 
+	// When
+	commandFactory := createCommandFactoryWithFailingSSHAdd()
+	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, commandFactory)
 	output, err := activateSSHKey.Run(config)
 
+	// Then
 	wantOutput := Result{sshAuthSock: ""}
 	wantErr := newStepError(
 		"ssh_key_requires_passphrase",

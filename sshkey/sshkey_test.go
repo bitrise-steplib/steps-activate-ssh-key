@@ -12,7 +12,7 @@ import (
 )
 
 func TestAgentAddKey_CallsSSHAgent(t *testing.T) {
-	// Given Simple SSH Agent
+	// Given
 	logger := log.NewDefaultLogger()
 
 	sshKeyPth := "ssh-key-path"
@@ -25,7 +25,7 @@ func TestAgentAddKey_CallsSSHAgent(t *testing.T) {
 	fileWriter := new(MockFileWriter)
 	fileWriter.On("Write", sshAddScriptPth, createAddSSHKeyScript(sshKeyPth), mock.Anything).Return(nil).Once()
 
-	// When adds an SSH Key
+	// When
 	cmd := new(MockCommand)
 	cmd.On("RunAndReturnExitCode").Return(0, nil).Once()
 	cmd.On("SetStdout", os.Stdout).Return(nil).Once()
@@ -42,7 +42,7 @@ func TestAgentAddKey_CallsSSHAgent(t *testing.T) {
 	agent := NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
 	err := agent.AddKey(sshKeyPth)
 
-	// Then bash -c command gets called
+	// Then
 	assert.NoError(t, err)
 	cmd.AssertExpectations(t)
 }
