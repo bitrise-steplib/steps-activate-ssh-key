@@ -52,7 +52,6 @@ func (a Agent) Kill() (int, error) {
 // ListKeys ...
 func (a Agent) ListKeys() (int, error) {
 	cmd := a.cmdFactory.Create("ssh-add", []string{"-l"}, &command.Opts{
-		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 	})
 	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
