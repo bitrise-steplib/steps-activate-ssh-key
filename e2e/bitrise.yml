@@ -5,36 +5,36 @@ app:
   envs:
   - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
   # define these envs in your .bitrise.secrets.yml
-  - INVALID_SSH_KEY: $INVALID_SSH_KEY
-  - MISSING_NEWLINE_SSH_KEY: $MISSING_NEWLINE_SSH_KEY
-  - PEM_FORMAT_SSH_KEY: $PEM_FORMAT_SSH_KEY
-  - OPENSSH_FORMAT_SSH_KEY: $OPENSSH_FORMAT_SSH_KEY
+  - INVALID_SSH_PRIVATE_KEY: $INVALID_SSH_PRIVATE_KEY
+  - MISSING_NEWLINE_SSH_PRIVATE_KEY: $MISSING_NEWLINE_SSH_PRIVATE_KEY
+  - PEM_FORMAT_SSH_PRIVATE_KEY: $PEM_FORMAT_SSH_PRIVATE_KEY
+  - OPENSSH_FORMAT_SSH_PRIVATE_KEY: $OPENSSH_FORMAT_SSH_PRIVATE_KEY
 
 workflows:
   test_pem_format_key:
     envs:
-    - SSH_RSA_PRIVATE_KEY: $PEM_FORMAT_SSH_KEY
+    - SSH_RSA_PRIVATE_KEY: $PEM_FORMAT_SSH_PRIVATE_KEY
     after_run:
     - _run
     - _check_output
 
   test_openssh_format_key:
     envs:
-    - SSH_RSA_PRIVATE_KEY: $OPENSSH_FORMAT_SSH_KEY
+    - SSH_RSA_PRIVATE_KEY: $OPENSSH_FORMAT_SSH_PRIVATE_KEY
     after_run:
     - _run
     - _check_output
 
   test_missing_newline_key:
     envs:
-    - SSH_RSA_PRIVATE_KEY: $MISSING_NEWLINE_SSH_KEY
+    - SSH_RSA_PRIVATE_KEY: $MISSING_NEWLINE_SSH_PRIVATE_KEY
     after_run:
     - _run
     - _check_output
 
   utility_fail_invalid_key:
     envs:
-    - SSH_RSA_PRIVATE_KEY: $INVALID_SSH_KEY
+    - SSH_RSA_PRIVATE_KEY: $INVALID_SSH_PRIVATE_KEY
     after_run:
     - _run
     - _check_output
