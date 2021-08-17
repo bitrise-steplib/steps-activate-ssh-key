@@ -46,8 +46,8 @@ func createActivateSSHKey() *step.ActivateSSHKey {
 
 	fileWriter := filewriter.NewOsFileWriter()
 	tempDirProvider := pathutil.NewOsTempDirProvider()
-	commandFactory := command.NewCommand
-	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, commandFactory)
+	cmdFactory := command.NewDefaultFactory()
+	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
 
 	return step.NewActivateSSHKey(stepInputParser, *envValueClearer, envmanEnvRepository, osEnvRepository, fileWriter, *agent, logger)
 }

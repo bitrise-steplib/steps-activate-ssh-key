@@ -20,30 +20,28 @@ func Test_WhenSSHKeyIsAdded_ThenItCallsSSHAddScript(t *testing.T) {
 	sshAddScriptPth := filepath.Join(tmpDir, addSSHKeyScriptFileName)
 
 	tempDirProvider := new(MockTempDirProvider)
-	tempDirProvider.On("CreateTempDir", mock.Anything).Return(tmpDir, nil).Once()
+	tempDirProvider.On("CreateTempDir", mock.Anything).Return(tmpDir, nil)
 
 	fileWriter := new(MockFileWriter)
-	fileWriter.On("Write", sshAddScriptPth, createAddSSHKeyScript(sshKeyPth), mock.Anything).Return(nil).Once()
+	fileWriter.On("Write", sshAddScriptPth, createAddSSHKeyScript(sshKeyPth), mock.Anything).Return(nil)
 
 	cmd := new(MockCommand)
-	cmd.On("RunAndReturnExitCode").Return(0, nil).Once()
-	cmd.On("SetStdout", os.Stdout).Return(nil).Once()
-	cmd.On("SetStderr", os.Stderr).Return(nil).Once()
-	cmd.On("PrintableCommandArgs").Return("").Once()
-	cmdFactory := func(name string, args ...string) command.Command {
-		if len(args) == 2 && name == "bash" && args[0] == "-c" && args[1] == sshAddScriptPth {
-			return cmd
-		}
-		t.Fatalf("Unknown command")
-		return nil
-	}
+	cmd.On("RunAndReturnExitCode").Return(0, nil)
+	cmd.On("PrintableCommandArgs").Return("")
 
-	agent := NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
+	factory := new(MockFactory)
+	factory.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(cmd)
+
+	agent := NewAgent(fileWriter, tempDirProvider, logger, factory)
 
 	// When
 	err := agent.AddKey(sshKeyPth)
 
 	// Then
 	assert.NoError(t, err)
-	cmd.AssertExpectations(t)
+	cmd.AssertCalled(t, "RunAndReturnExitCode")
+	factory.AssertCalled(t, "Create", "bash", []string{"-c", sshAddScriptPth}, &command.Opts{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	})
 }

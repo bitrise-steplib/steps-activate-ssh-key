@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
+
 	"github.com/bitrise-steplib/steps-activate-ssh-key/filewriter"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/pathutil"
@@ -16,17 +17,17 @@ type Agent struct {
 	fileWriter      filewriter.FileWriter
 	tempDirProvider pathutil.TempDirProvider
 	logger          log.Logger
-	commandFactory  command.Factory
+	cmdFactory      command.Factory
 }
 
 // NewAgent ...
-func NewAgent(fileWriter filewriter.FileWriter, tempDirProvider pathutil.TempDirProvider, logger log.Logger, commandFactory command.Factory) *Agent {
-	return &Agent{fileWriter: fileWriter, tempDirProvider: tempDirProvider, logger: logger, commandFactory: commandFactory}
+func NewAgent(fileWriter filewriter.FileWriter, tempDirProvider pathutil.TempDirProvider, logger log.Logger, cmdFactory command.Factory) *Agent {
+	return &Agent{fileWriter: fileWriter, tempDirProvider: tempDirProvider, logger: logger, cmdFactory: cmdFactory}
 }
 
 // Start ...
 func (a Agent) Start() (string, error) {
-	cmd := a.commandFactory("ssh-agent")
+	cmd := a.cmdFactory.Create("ssh-agent", nil, nil)
 
 	a.logger.Println()
 	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
@@ -37,9 +38,10 @@ func (a Agent) Start() (string, error) {
 // Kill ...
 func (a Agent) Kill() (int, error) {
 	// try to kill the agent
-	cmd := a.commandFactory("ssh-agent", "-k")
-	cmd.SetStdout(os.Stdout)
-	cmd.SetStderr(os.Stderr)
+	cmd := a.cmdFactory.Create("ssh-agent", []string{"-k"}, &command.Opts{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	})
 
 	a.logger.Println()
 	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
@@ -49,8 +51,9 @@ func (a Agent) Kill() (int, error) {
 
 // ListKeys ...
 func (a Agent) ListKeys() (int, error) {
-	cmd := a.commandFactory("ssh-add", "-l")
-	cmd.SetStderr(os.Stderr)
+	cmd := a.cmdFactory.Create("ssh-add", []string{"-l"}, &command.Opts{
+		Stderr: os.Stderr,
+	})
 	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
 
 	return cmd.RunAndReturnExitCode()
@@ -88,9 +91,10 @@ func (a Agent) AddKey(sshKeyPth string) error {
 		return fmt.Errorf("failed to write the SSH key to the provided path, %s", err)
 	}
 
-	cmd := a.commandFactory("bash", "-c", filePth)
-	cmd.SetStderr(os.Stderr)
-	cmd.SetStdout(os.Stdout)
+	cmd := a.cmdFactory.Create("bash", []string{"-c", filePth}, &command.Opts{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	})
 
 	a.logger.Println()
 	a.logger.Printf("$ %s", cmd.PrintableCommandArgs())
@@ -112,9 +116,10 @@ func (a Agent) AddKey(sshKeyPth string) error {
 // DeleteKeys ...
 func (a Agent) DeleteKeys() error {
 	// remove all keys from the current agent
-	cmd := a.commandFactory("ssh-add", "-D")
-	cmd.SetStdout(os.Stdout)
-	cmd.SetStderr(os.Stderr)
+	cmd := a.cmdFactory.Create("ssh-add", []string{"-D"}, &command.Opts{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	})
 
 	a.logger.Println()
 	a.logger.Println()

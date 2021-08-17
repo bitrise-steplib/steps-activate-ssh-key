@@ -2,26 +2,69 @@ package command
 
 import (
 	"io"
+	"os/exec"
 
 	"github.com/bitrise-io/go-utils/command"
 )
 
 // TODO: Move to `go-utils`
 
+// Opts ...
+type Opts struct {
+	Stdout io.Writer
+	Stderr io.Writer
+}
+
+// Factory ...
+type Factory interface {
+	Create(name string, args []string, opts *Opts) Command
+}
+
+type defaultFactory struct{}
+
+// NewDefaultFactory ...
+func NewDefaultFactory() Factory {
+	return &defaultFactory{}
+}
+
+// Create ...
+func (b *defaultFactory) Create(name string, args []string, opts *Opts) Command {
+	cmd := exec.Command(name, args...)
+	if opts != nil {
+		cmd.Stdout = opts.Stdout
+		cmd.Stderr = opts.Stderr
+	}
+	return defaultCommand{cmd}
+}
+
 // Command ...
 type Command interface {
 	PrintableCommandArgs() string
 	RunAndReturnTrimmedOutput() (string, error)
-	SetStdout(stdout io.Writer) *command.Model
-	SetStderr(stdout io.Writer) *command.Model
 	RunAndReturnExitCode() (int, error)
 	Run() error
 }
 
-// Factory ...
-type Factory func(name string, args ...string) Command
+type defaultCommand struct {
+	cmd *exec.Cmd
+}
 
-// NewCommand ...
-func NewCommand(name string, args ...string) Command {
-	return command.New(name, args...)
+// RunAndReturnTrimmedOutput ...
+func (r defaultCommand) RunAndReturnTrimmedOutput() (string, error) {
+	return command.RunCmdAndReturnTrimmedOutput(r.cmd)
+}
+
+// RunAndReturnExitCode ...
+func (r defaultCommand) RunAndReturnExitCode() (int, error) {
+	return command.RunCmdAndReturnExitCode(r.cmd)
+}
+
+// Run ...
+func (r defaultCommand) Run() error {
+	return r.cmd.Run()
+}
+
+// PrintableCommandArgs ...
+func (r defaultCommand) PrintableCommandArgs() string {
+	return command.PrintableCommandArgs(false, r.cmd.Args)
 }

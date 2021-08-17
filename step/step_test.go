@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -46,49 +44,58 @@ func Test_GivenFailingSSHAgent_WhenStepRuns_ThenSSHAgentGetsRestartedAndSSHKeyGe
 	// Then
 	assert.NoError(t, err)
 	sshKeyAgent.AssertCalled(t, "Start")
-	sshKeyAgent.AssertCalled(t, "AddKey")
+	sshKeyAgent.AssertCalled(t, "AddKey", mock.Anything)
 }
 
 func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 	// Given
 	logger := createLogger()
 	osEnvRepository := createOsEnvRepositoryWithSSHKey()
-	envmanEnvRespository := createEnvmanEnvRepository()
+	envValueClearer := new(MockEnvValueClearer)
+	envValueClearer.On("UnsetByValue", privateKey).Return(nil)
 	fileWriter := createFileWriter()
-	tempDirProvider := createTempProvider()
-	commandFactory := func(name string, args ...string) command.Command { return createCommand() }
-	activateSSHKey := createActivateSSHKey(osEnvRepository, envmanEnvRespository, fileWriter, logger, tempDirProvider, commandFactory)
 	config := createConfigWithDefaults()
 
+	sshKeyAgent := new(MockSSHKeyAgent)
+	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
+	sshKeyAgent.On("Start").Return("", nil)
+	sshKeyAgent.On("AddKey", mock.Anything).Return(nil).Once()
+
+	step := NewActivateSSHKey(nil, envValueClearer, nil, osEnvRepository, fileWriter, sshKeyAgent, logger)
+
 	// When
-	output, err := activateSSHKey.Run(config)
+	output, err := step.Run(config)
 
 	// Then
 	assert.NoError(t, err)
 	assert.Equal(t, output.sshAuthSock, "")
-	osEnvRepository.AssertCalled(t, "Unset", envKey)
-	envmanEnvRespository.AssertCalled(t, "Unset", envKey)
+	envValueClearer.AssertCalled(t, "UnsetByValue", privateKey)
 }
 
 func Test_GivenSSHKeyAddFails_WhenStepRuns_ThenItFails(t *testing.T) {
 	// Given
 	logger := createLogger()
 	osEnvRepository := createOsEnvRepositoryWithSSHKey()
-	osEnvManager := createEnvmanEnvRepository()
+	envValueClearer := new(MockEnvValueClearer)
+	envValueClearer.On("UnsetByValue", mock.Anything).Return(nil)
 	fileWriter := createFileWriter()
-	tempDirProvider := createTempProvider()
 	config := createConfigWithDefaults()
-	commandFactory := createCommandFactoryWithFailingSSHAdd()
-	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, commandFactory)
+
+	sshKeyAgent := new(MockSSHKeyAgent)
+	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
+	sshKeyAgent.On("Start").Return("", nil)
+	sshKeyAgent.On("AddKey", mock.Anything).Return(errors.New("mocked error")).Once()
+
+	step := NewActivateSSHKey(nil, envValueClearer, nil, osEnvRepository, fileWriter, sshKeyAgent, logger)
 
 	// When
-	output, err := activateSSHKey.Run(config)
+	output, err := step.Run(config)
 
 	// Then
 	wantOutput := Result{sshAuthSock: ""}
 	wantErr := newStepError(
 		"ssh_key_requires_passphrase",
-		fmt.Errorf("SSH key requires passphrase: %v", errors.New("failed to add the SSH key to ssh-agent with an empty passphrase")),
+		fmt.Errorf("SSH key requires passphrase: %v", errors.New("mocked error")),
 		"SSH key requires passphrase",
 	)
 	assert.Equal(t, wantOutput, output)
@@ -101,13 +108,6 @@ func createOsEnvRepositoryWithSSHKey() (osEnvRepository *MockOsRepository) {
 	osEnvRepository.On("Set", mock.Anything, mock.Anything).Return(nil)
 	osEnvRepository.On("Unset", mock.Anything).Return(nil)
 	osEnvRepository.On("List").Return([]string{envKey + "=" + privateKey})
-	return
-}
-
-func createEnvmanEnvRepository() (envmanEnvRepository *MockEnvmanRepository) {
-	envmanEnvRepository = new(MockEnvmanRepository)
-	envmanEnvRepository.On("Set", mock.Anything, mock.Anything).Return(nil)
-	envmanEnvRepository.On("Unset", mock.Anything).Return(nil)
 	return
 }
 
@@ -125,50 +125,6 @@ func createLogger() (logger *MockLogger) {
 	logger.On("Errorf", mock.Anything, mock.Anything).Return()
 	logger.On("Println").Return()
 	return
-}
-
-func createTempProvider() (tempDirProvider *MockTempDirProvider) {
-	tempDirProvider = new(MockTempDirProvider)
-	tempDirProvider.On("CreateTempDir", mock.Anything).Return("temp-dir", nil)
-	return
-}
-
-func createCommand() (command *MockCommand) {
-	command = new(MockCommand)
-	command.On("RunAndReturnExitCode", mock.Anything).Return(0, nil)
-	command.On("RunAndReturnTrimmedOutput", mock.Anything).Return("", nil)
-	command.On("Run", mock.Anything).Return(nil)
-	command.On("PrintableCommandArgs").Return("")
-	command.On("SetStdout", mock.Anything).Return(nil)
-	command.On("SetStderr", mock.Anything).Return(nil)
-	return
-}
-
-func createCommandFactoryWithFailingSSHAdd() command.Factory {
-	mockCommand := createCommand()
-	failingMockCommand := new(MockCommand)
-	failingMockCommand.On("RunAndReturnExitCode").Return(1, errors.New("mocked error"))
-	failingMockCommand.On("SetStdout", mock.Anything).Return(nil)
-	failingMockCommand.On("SetStderr", mock.Anything).Return(nil)
-	failingMockCommand.On("PrintableCommandArgs").Return("")
-	return func(name string, args ...string) command.Command {
-		if name == "bash" && args[0] == "-c" {
-			return failingMockCommand
-		}
-		return mockCommand
-	}
-}
-
-func createActivateSSHKey(osEnvRepository *MockOsRepository, envmanEnvRepository *MockEnvmanRepository, fileWriter *MockFileWriter, logger *MockLogger, tempDirProvider *MockTempDirProvider, commandFactory command.Factory) *ActivateSSHKey {
-	return &ActivateSSHKey{
-		stepInputParser:     nil,
-		envmanEnvRepository: envmanEnvRepository,
-		osEnvRepository:     osEnvRepository,
-		envValueClearer:     *NewCombinedEnvValueClearer(logger, osEnvRepository, envmanEnvRepository),
-		fileWriter:          fileWriter,
-		sshKeyAgent:         *sshkey.NewAgent(fileWriter, tempDirProvider, logger, commandFactory),
-		logger:              logger,
-	}
 }
 
 func createConfigWithDefaults() Config {
