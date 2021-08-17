@@ -94,7 +94,7 @@ func (a Agent) AddKey(sshKeyPth, socket string) error {
 	cmd := a.cmdFactory.Create("bash", []string{"-c", filePth}, &command.Opts{
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
-		Env:    append(os.Environ(), "SSH_AUTH_SOCK="+socket),
+		Env:    []string{"SSH_AUTH_SOCK=" + socket},
 	})
 
 	a.logger.Println()

@@ -2,6 +2,7 @@ package command
 
 import (
 	"io"
+	"os"
 	"os/exec"
 
 	"github.com/bitrise-io/go-utils/command"
@@ -34,7 +35,7 @@ func (b *defaultFactory) Create(name string, args []string, opts *Opts) Command 
 	if opts != nil {
 		cmd.Stdout = opts.Stdout
 		cmd.Stderr = opts.Stderr
-		cmd.Env = opts.Env
+		cmd.Env = append(os.Environ(), opts.Env...)
 	}
 	return defaultCommand{cmd}
 }
