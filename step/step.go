@@ -122,6 +122,11 @@ func (a ActivateSSHKey) Export(result Result) error {
 	return nil
 }
 
+func splitEnv(env string) (string, string) {
+	e := strings.Split(env, "=")
+	return e[0], strings.Join(e[1:], "=")
+}
+
 func (a ActivateSSHKey) clearSSHKeys(privateKey string) error {
 	for _, env := range a.envRepository.List() {
 		key, value := splitEnv(env)

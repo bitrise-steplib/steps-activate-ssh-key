@@ -23,9 +23,6 @@ func Test_GivenFailingSSHAgent_WhenStepRuns_ThenSSHAgentGetsRestartedAndSSHKeyGe
 	fileWriter := new(MockFileWriter)
 	fileWriter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	tempDirProvider := new(MockTempDirProvider)
-	tempDirProvider.On("CreateTempDir", mock.Anything).Return("temp-dir", nil)
-
 	config := createConfigWithDefaults()
 
 	sshKeyAgent := new(MockSSHKeyAgent)
