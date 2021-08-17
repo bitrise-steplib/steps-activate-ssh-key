@@ -50,7 +50,7 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | `ssh_rsa_private_key` |  | sensitive | `$SSH_RSA_PRIVATE_KEY` |
 | `ssh_key_save_path` |  |  | `$HOME/.ssh/bitrise_step_activate_ssh_key` |
 | `is_remove_other_identities` | (Optional) Remove other or previously loaded keys and restart ssh-agent?  Options:  * "true" * "false" |  | `true` |
-| `verbose` | Enable verbose log option for better debug | required |  |
+| `verbose` | Enable verbose log option for better debug | required | `false` |
 </details>
 
 <details>
