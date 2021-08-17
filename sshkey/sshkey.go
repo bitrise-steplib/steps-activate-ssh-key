@@ -2,13 +2,13 @@ package sshkey
 
 import (
 	"fmt"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/pathutil"
 	"os"
 	"path/filepath"
 
 	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/filewriter"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/pathutil"
 )
 
 // Agent ...
@@ -56,10 +56,9 @@ func (a Agent) ListKeys() (int, error) {
 	return cmd.RunAndReturnExitCode()
 }
 
-// AddKey ...
-func (a Agent) AddKey(path string) error {
-	spawnString := `expect <<EOD
-spawn ssh-add ` + path + `
+func createAddSSHKeyScript(sshKeyPth string) string {
+	return fmt.Sprintf(`expect <<EOD
+spawn ssh-add %s
 expect {
 	"Enter passphrase for" {
 		exit 1
@@ -72,15 +71,20 @@ send "nopass\n"
 EOD
 if [ $? -ne 0 ] ; then
 exit 1
-fi`
+fi`, sshKeyPth)
+}
 
+const addSSHKeyScriptFileName = "tmp_spawn.sh"
+
+// AddKey ...
+func (a Agent) AddKey(sshKeyPth string) error {
 	pth, err := a.tempDirProvider.CreateTempDir("spawn")
 	if err != nil {
 		return err
 	}
 
-	filePth := filepath.Join(pth, "tmp_spawn.sh")
-	if err := a.fileWriter.Write(filePth, spawnString, 0770); err != nil {
+	filePth := filepath.Join(pth, addSSHKeyScriptFileName)
+	if err := a.fileWriter.Write(filePth, createAddSSHKeyScript(sshKeyPth), 0770); err != nil {
 		return fmt.Errorf("failed to write the SSH key to the provided path, %s", err)
 	}
 
