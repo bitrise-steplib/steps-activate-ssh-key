@@ -15,7 +15,7 @@ import (
 const privateKey = "test-key"
 const envKey = "env-key"
 
-func TestStepRun_IfAgentRestarted_SSHKeyAdded(t *testing.T) {
+func Test_GivenFailingSSHAgent_WhenStepRuns_ThenSSHAgentGetsRestartedAndSSHKeyGetsAdded(t *testing.T) {
 	// Given
 	logger := log.NewDefaultLogger()
 
@@ -33,7 +33,6 @@ func TestStepRun_IfAgentRestarted_SSHKeyAdded(t *testing.T) {
 
 	config := createConfigWithDefaults()
 
-	// When
 	sshKeyAgent := new(MockSSHKeyAgent)
 	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
 	sshKeyAgent.On("Start").Return("", nil)
@@ -41,22 +40,24 @@ func TestStepRun_IfAgentRestarted_SSHKeyAdded(t *testing.T) {
 
 	step := NewActivateSSHKey(nil, envValueClearer, nil, osEnvRepository, fileWriter, sshKeyAgent, logger)
 
+	// When
 	_, err := step.Run(config)
 
 	// Then
 	assert.NoError(t, err)
-	sshKeyAgent.AssertExpectations(t)
+	sshKeyAgent.AssertCalled(t, "Start")
+	sshKeyAgent.AssertCalled(t, "AddKey")
 }
 
-func Test_SSHPrivateKeyRemoved(t *testing.T) {
+func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 	// Given
 	logger := createLogger()
 	osEnvRepository := createOsEnvRepositoryWithSSHKey()
-	osEnvManager := createEnvmanEnvRepository()
+	envmanEnvRespository := createEnvmanEnvRepository()
 	fileWriter := createFileWriter()
 	tempDirProvider := createTempProvider()
 	commandFactory := func(name string, args ...string) command.Command { return createCommand() }
-	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, commandFactory)
+	activateSSHKey := createActivateSSHKey(osEnvRepository, envmanEnvRespository, fileWriter, logger, tempDirProvider, commandFactory)
 	config := createConfigWithDefaults()
 
 	// When
@@ -65,13 +66,11 @@ func Test_SSHPrivateKeyRemoved(t *testing.T) {
 	// Then
 	assert.NoError(t, err)
 	assert.Equal(t, output.sshAuthSock, "")
-	osEnvRepository.AssertNumberOfCalls(t, "Unset", 1)
 	osEnvRepository.AssertCalled(t, "Unset", envKey)
-	osEnvManager.AssertNumberOfCalls(t, "Unset", 1)
-	osEnvManager.AssertCalled(t, "Unset", envKey)
+	envmanEnvRespository.AssertCalled(t, "Unset", envKey)
 }
 
-func Test_ErrorRaisedIfSSHAddFails(t *testing.T) {
+func Test_GivenSSHKeyAddFails_WhenStepRuns_ThenItFails(t *testing.T) {
 	// Given
 	logger := createLogger()
 	osEnvRepository := createOsEnvRepositoryWithSSHKey()
@@ -79,10 +78,10 @@ func Test_ErrorRaisedIfSSHAddFails(t *testing.T) {
 	fileWriter := createFileWriter()
 	tempDirProvider := createTempProvider()
 	config := createConfigWithDefaults()
-
-	// When
 	commandFactory := createCommandFactoryWithFailingSSHAdd()
 	activateSSHKey := createActivateSSHKey(osEnvRepository, osEnvManager, fileWriter, logger, tempDirProvider, commandFactory)
+
+	// When
 	output, err := activateSSHKey.Run(config)
 
 	// Then

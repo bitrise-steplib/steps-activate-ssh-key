@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestAgentAddKey_CallsSSHAgent(t *testing.T) {
+func Test_WhenSSHKeyIsAdded_ThenItCallsSSHAddScript(t *testing.T) {
 	// Given
 	logger := log.NewDefaultLogger()
 
@@ -25,7 +25,6 @@ func TestAgentAddKey_CallsSSHAgent(t *testing.T) {
 	fileWriter := new(MockFileWriter)
 	fileWriter.On("Write", sshAddScriptPth, createAddSSHKeyScript(sshKeyPth), mock.Anything).Return(nil).Once()
 
-	// When
 	cmd := new(MockCommand)
 	cmd.On("RunAndReturnExitCode").Return(0, nil).Once()
 	cmd.On("SetStdout", os.Stdout).Return(nil).Once()
@@ -40,6 +39,8 @@ func TestAgentAddKey_CallsSSHAgent(t *testing.T) {
 	}
 
 	agent := NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
+
+	// When
 	err := agent.AddKey(sshKeyPth)
 
 	// Then
