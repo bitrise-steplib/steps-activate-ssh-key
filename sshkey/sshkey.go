@@ -80,7 +80,7 @@ fi`, sshKeyPth)
 const addSSHKeyScriptFileName = "tmp_spawn.sh"
 
 // AddKey ...
-func (a Agent) AddKey(sshKeyPth string) error {
+func (a Agent) AddKey(sshKeyPth, socket string) error {
 	pth, err := a.tempDirProvider.CreateTempDir("spawn")
 	if err != nil {
 		return err
@@ -94,6 +94,7 @@ func (a Agent) AddKey(sshKeyPth string) error {
 	cmd := a.cmdFactory.Create("bash", []string{"-c", filePth}, &command.Opts{
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
+		Env:    []string{"SSH_AUTH_SOCK=" + socket},
 	})
 
 	a.logger.Println()

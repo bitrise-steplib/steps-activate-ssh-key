@@ -59,29 +59,22 @@ type SSHKeyAgent interface {
 	Start() (string, error)
 	Kill() (int, error)
 	ListKeys() (int, error)
-	AddKey(sshKeyPth string) error
+	AddKey(sshKeyPth, socket string) error
 	DeleteKeys() error
-}
-
-// EnvValueClearer ...
-type EnvValueClearer interface {
-	UnsetByValue(value string) error
 }
 
 // ActivateSSHKey ...
 type ActivateSSHKey struct {
-	stepInputParser     InputParser
-	envValueClearer     EnvValueClearer
-	envmanEnvRepository env.EnvmanRepository
-	osEnvRepository     env.OsRepository
-	fileWriter          filewriter.FileWriter
-	sshKeyAgent         SSHKeyAgent
-	logger              log.Logger
+	stepInputParser InputParser
+	envRepository   env.Repository
+	fileWriter      filewriter.FileWriter
+	sshKeyAgent     SSHKeyAgent
+	logger          log.Logger
 }
 
 // NewActivateSSHKey ...
-func NewActivateSSHKey(stepInputParse InputParser, envValueClearer EnvValueClearer, envmanEnvRepository env.EnvmanRepository, osEnvRepository env.OsRepository, fileWriter filewriter.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
-	return &ActivateSSHKey{stepInputParser: stepInputParse, envValueClearer: envValueClearer, envmanEnvRepository: envmanEnvRepository, osEnvRepository: osEnvRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
+func NewActivateSSHKey(stepInputParse InputParser, envRepository env.Repository, fileWriter filewriter.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
+	return &ActivateSSHKey{stepInputParser: stepInputParse, envRepository: envRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
 }
 
 // ProcessConfig ...
@@ -123,19 +116,30 @@ func (a ActivateSSHKey) Export(result Result) error {
 	if authSock == "" {
 		return nil
 	}
-	if err := a.envmanEnvRepository.Set("SSH_AUTH_SOCK", authSock); err != nil {
+	if err := a.envRepository.Set("SSH_AUTH_SOCK", authSock); err != nil {
 		return err
 	}
 	return nil
 }
 
+func splitEnv(env string) (string, string) {
+	e := strings.Split(env, "=")
+	return e[0], strings.Join(e[1:], "=")
+}
+
 func (a ActivateSSHKey) clearSSHKeys(privateKey string) error {
-	if err := a.envValueClearer.UnsetByValue(privateKey); err != nil {
-		return newStepError(
-			"removing_private_key_data_failed",
-			fmt.Errorf("failed to remove private key data from envs: %v", err),
-			"Failed to remove private key data from envs",
-		)
+	for _, env := range a.envRepository.List() {
+		key, value := splitEnv(env)
+
+		if value == privateKey {
+			if err := a.envRepository.Unset(key); err != nil {
+				return newStepError(
+					"removing_private_key_data_failed",
+					fmt.Errorf("failed to remove private key data from envs: %v", err),
+					"Failed to remove private key data from envs",
+				)
+			}
+		}
 	}
 	return nil
 }
@@ -152,7 +156,7 @@ func (a ActivateSSHKey) activate(privateKeyPath, privateKey string, isRemoveOthe
 		)
 	}
 
-	result, err := a.restartAgent(isRemoveOtherIdentities)
+	socket, err := a.restartAgent(isRemoveOtherIdentities)
 	if err != nil {
 		return "", newStepError(
 			"restarting_ssh_agent_failed",
@@ -161,14 +165,14 @@ func (a ActivateSSHKey) activate(privateKeyPath, privateKey string, isRemoveOthe
 		)
 	}
 
-	if err := a.sshKeyAgent.AddKey(privateKeyPath); err != nil {
-		return result, newStepError(
+	if err := a.sshKeyAgent.AddKey(privateKeyPath, socket); err != nil {
+		return socket, newStepError(
 			"ssh_key_requires_passphrase",
 			fmt.Errorf("SSH key requires passphrase: %v", err),
 			"SSH key requires passphrase",
 		)
 	}
-	return result, nil
+	return socket, nil
 }
 
 func (a ActivateSSHKey) restartAgent(removeOtherIdentities bool) (string, error) {
@@ -212,14 +216,10 @@ func (a ActivateSSHKey) restartAgent(removeOtherIdentities bool) (string, error)
 
 		a.logger.Printf("Expose SSH_AUTH_SOCK for the new ssh-agent, with envman")
 
-		returnValue = strings.TrimPrefix(returnValue, "SSH_AUTH_SOCK=")
-		returnValue = strings.Split(returnValue, ";")[0]
+		socket := strings.TrimPrefix(returnValue, "SSH_AUTH_SOCK=")
+		socket = strings.Split(socket, ";")[0]
 
-		if err = a.osEnvRepository.Set("SSH_AUTH_SOCK", returnValue); err != nil {
-			return "", fmt.Errorf("failed to set SSH_AUTH_SOCK env: %s", err.Error())
-		}
-
-		return returnValue, nil
+		return socket, nil
 	}
 	return "", nil
 }

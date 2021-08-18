@@ -37,17 +37,17 @@ func run() error {
 }
 
 func createActivateSSHKey() *step.ActivateSSHKey {
-	stepInputParser := step.NewEnvInputParser()
-
 	logger := localLogger.NewDefaultLogger()
-	osEnvRepository := env.NewOsRepository()
-	envmanEnvRepository := env.NewEnvmanRepository()
-	envValueClearer := step.NewCombinedEnvValueClearer(logger, osEnvRepository, envmanEnvRepository)
 
 	fileWriter := filewriter.NewOsFileWriter()
 	tempDirProvider := pathutil.NewOsTempDirProvider()
-	cmdFactory := command.NewDefaultFactory()
+	osEnvRepository := env.NewOsRepository()
+	cmdFactory := command.NewDefaultFactory(osEnvRepository)
 	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
 
-	return step.NewActivateSSHKey(stepInputParser, *envValueClearer, envmanEnvRepository, osEnvRepository, fileWriter, *agent, logger)
+	stepInputParser := step.NewEnvInputParser()
+	envmanEnvRepository := env.NewEnvmanRepository()
+	envRepository := env.NewRepository(osEnvRepository, envmanEnvRepository)
+
+	return step.NewActivateSSHKey(stepInputParser, envRepository, fileWriter, *agent, logger)
 }
