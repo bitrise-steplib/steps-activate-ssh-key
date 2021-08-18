@@ -43,6 +43,6 @@ func Test_WhenSSHKeyIsAdded_ThenItCallsSSHAddScript(t *testing.T) {
 	factory.AssertCalled(t, "Create", "bash", []string{"-c", sshAddScriptPth}, &command.Opts{
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
-		Env:    append(os.Environ(), "SSH_AUTH_SOCK=socket"),
+		Env:    []string{"SSH_AUTH_SOCK=socket"},
 	})
 }

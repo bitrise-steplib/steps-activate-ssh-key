@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -15,7 +14,7 @@ const envKey = "env-key"
 
 func Test_GivenFailingSSHAgent_WhenStepRuns_ThenSSHAgentGetsRestartedAndSSHKeyGetsAdded(t *testing.T) {
 	// Given
-	logger := log.NewDefaultLogger()
+	logger := createLogger()
 
 	envRepository := new(MockRepository)
 	envRepository.On("List").Return(nil)
@@ -46,7 +45,7 @@ func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 	logger := createLogger()
 
 	envRepository := new(MockRepository)
-	envRepository.On("List").Return([]string{"key=" + privateKey})
+	envRepository.On("List").Return([]string{envKey + "=" + privateKey})
 	envRepository.On("Unset", mock.Anything).Return(nil)
 
 	fileWriter := createFileWriter()
@@ -65,7 +64,7 @@ func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 	// Then
 	assert.NoError(t, err)
 	assert.Equal(t, output.sshAuthSock, "")
-	envRepository.AssertCalled(t, "Unset", "key")
+	envRepository.AssertCalled(t, "Unset", envKey)
 }
 
 func Test_GivenSSHKeyAddFails_WhenStepRuns_ThenItFails(t *testing.T) {
