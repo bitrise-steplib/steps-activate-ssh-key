@@ -8,11 +8,26 @@ import (
 
 // TODO: Move to `go-utils`
 
+// Setter ...
+type Setter interface {
+	Set(key, value string) error
+}
+
+// Unsetter ...
+type Unsetter interface {
+	Unset(key string) error
+}
+
+// Lister ...
+type Lister interface {
+	List() []string
+}
+
 // Repository ...
 type Repository interface {
-	Set(key, value string) error
-	Unset(key string) error
-	List() []string
+	Setter
+	Unsetter
+	Lister
 }
 
 // NewRepository ...
@@ -55,9 +70,9 @@ func (r defaultRepository) List() []string {
 
 // OsRepository ...
 type OsRepository interface {
-	Unset(key string) error
-	Set(key string, value string) error
-	List() []string
+	Setter
+	Unsetter
+	Lister
 }
 
 type osRepository struct{}
@@ -86,8 +101,8 @@ func (m osRepository) Set(key string, value string) error {
 
 // EnvmanRepository ...
 type EnvmanRepository interface {
-	Unset(key string) error
-	Set(key string, value string) error
+	Setter
+	Unsetter
 }
 
 type envmanRepository struct{}
