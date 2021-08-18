@@ -2,3 +2,4 @@
 ssh/
 _tmp
 _tests/testsave
+.idea/

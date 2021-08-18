@@ -1,92 +1,75 @@
-steps-activate-ssh-key
-======================
+# Activate SSH key (RSA private key)
 
-Activates the given SSH key.
+[![Step changelog](https://shields.io/github/v/release/bitrise-io/steps-activate-ssh-key?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-io/steps-activate-ssh-key/releases)
 
-## How to use this Step
+Setup the SSH Key to use with the current workflow
 
-Can be run directly with the [bitrise CLI](https://github.com/bitrise-io/bitrise),
-just `git clone` this repository, `cd` into it's folder in your Terminal/Command Line
-and call `bitrise run test`.
+<details>
+<summary>Description</summary>
 
-*Check the `bitrise.yml` file for required inputs which have to be
-added to your `.bitrise.secrets.yml` file!*
+This Step makes sure Bitrise has access to your repository and thus able to clone your code to our virtual machines. The Step saves the provided private key of your SSH keypair to a file and then loads it into the user's ssh-agent with `ssh-add`.
 
-Step by step:
+### Configuring the Step
 
-1. Open up your Terminal / Command Line
-2. `git clone` the repository
-3. `cd` into the directory of the step (the one you just `git clone`d)
-5. Create a `.bitrise.secrets.yml` file in the same directory of `bitrise.yml` - the `.bitrise.secrets.yml` is a git ignored file, you can store your secrets in
-6. Check the `bitrise.yml` file for any secret you should set in `.bitrise.secrets.yml`
-  * Best practice is to mark these options with something like `# define these in your .bitrise.secrets.yml`, in the `app:envs` section.
-7. Once you have all the required secret parameters in your `.bitrise.secrets.yml` you can just run this step with the [bitrise CLI](https://github.com/bitrise-io/bitrise): `bitrise run test`
+By default, you do not have to change anything about the Step's configuration. All you need to do is make sure that you registered your key pair on Bitrise and the public key at your Git provider. You can generate and register an SSH keypair in two ways.
 
-An example `.bitrise.secrets.yml` file:
+- Automatically during the [app creation process](https://devcenter.bitrise.io/getting-started/adding-a-new-app/#setting-up-ssh-keys).
+- Manually during the app creation process or at any other time. You [generate your own SSH keys](https://devcenter.bitrise.io/faq/how-to-generate-ssh-keypair/) and register them on Bitrise and at your Git provider. The SSH key should not have a passphrase! 
 
-```
-envs:
-- A_SECRET_PARAM_ONE: the value for secret one
-- A_SECRET_PARAM_TWO: the value for secret two
-```
+Optionally, you can save the private key on the virtual machine. If a key already exists on the path you specified in the **(Optional) path to save the private key** input, it will be overwritten.
 
-## How to create your own step
+### Troubleshooting
 
-1. Create a new git repository for your step (**don't fork** the *step template*, create a *new* repository)
-2. Copy the [step template](https://github.com/bitrise-steplib/step-template) files into your repository
-3. Fill the `step.sh` with your functionality
-4. Wire out your inputs to `step.yml` (`inputs` section)
-5. Fill out the other parts of the `step.yml` too
-6. Provide test values for the inputs in the `bitrise.yml`
-7. Run your step with `bitrise run test` - if it works, you're ready
+If the Step fails, check the public key registered to your Git repository and compare it to the public key registered on Bitrise. The most frequent issue is that someone deleted or revoked the key on your Git provider's website.
 
-__For Step development guidelines & best practices__ check this documentation: [https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md](https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md).
+You can also set the **Enable verbose logging** input to `true`. This provides additional information in the log.
 
-**NOTE:**
+### Useful links
 
-If you want to use your step in your project's `bitrise.yml`:
+- [Setting up SSH keys](https://devcenter.bitrise.io/getting-started/adding-a-new-app/#setting-up-ssh-keys)
+- [How can I generate an SSH key pair?](https://devcenter.bitrise.io/faq/how-to-generate-ssh-keypair/)
 
-1. git push the step into it's repository
-2. reference it in your `bitrise.yml` with the `git::PUBLIC-GIT-CLONE-URL@BRANCH` step reference style:
+### Related Steps
 
-```
-- git::https://github.com/user/my-step.git@branch:
-   title: My step
-   inputs:
-   - my_input_1: "my value 1"
-   - my_input_2: "my value 2"
-```
+- [Git Clone Repository](https://www.bitrise.io/integrations/steps/git-clone)
+</details>
 
-You can find more examples of step reference styles
-in the [bitrise CLI repository](https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml#L65).
+## 🧩 Get started
 
-## How to contribute to this Step
+Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
 
-1. Fork this repository
-2. `git clone` it
-3. Create a branch you'll work on
-4. To use/test the step just follow the **How to use this Step** section
-5. Do the changes you want to
-6. Run/test the step before sending your contribution
-  * You can also test the step in your `bitrise` project, either on your Mac or on [bitrise.io](https://www.bitrise.io)
-  * You just have to replace the step ID in your project's `bitrise.yml` with either a relative path, or with a git URL format
-  * (relative) path format: instead of `- original-step-id:` use `- path::./relative/path/of/script/on/your/Mac:`
-  * direct git URL format: instead of `- original-step-id:` use `- git::https://github.com/user/step.git@branch:`
-  * You can find more example of alternative step referencing at: https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml
-7. Once you're done just commit your changes & create a Pull Request
+You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
 
+## ⚙️ Configuration
 
-## Share your own Step
+<details>
+<summary>Inputs</summary>
 
-You can share your Step or step version with the [bitrise CLI](https://github.com/bitrise-io/bitrise). If you use the `bitrise.yml` included in this repository, all you have to do is:
+| Key | Description | Flags | Default |
+| --- | --- | --- | --- |
+| `ssh_rsa_private_key` |  | sensitive | `$SSH_RSA_PRIVATE_KEY` |
+| `ssh_key_save_path` |  |  | `$HOME/.ssh/bitrise_step_activate_ssh_key` |
+| `is_remove_other_identities` | (Optional) Remove other or previously loaded keys and restart ssh-agent?  Options:  * "true" * "false" |  | `true` |
+| `verbose` | Enable verbose log option for better debug | required | `false` |
+</details>
 
-1. In your Terminal / Command Line `cd` into this directory (where the `bitrise.yml` of the step is located)
-1. Run: `bitrise run test` to test the step
-1. Run: `bitrise run audit-this-step` to audit the `step.yml`
-1. Check the `share-this-step` workflow in the `bitrise.yml`, and fill out the
-   `envs` if you haven't done so already (don't forget to bump the version number if this is an update
-   of your step!)
-1. Then run: `bitrise run share-this-step` to share the step (version) you specified in the `envs`
-1. Send the Pull Request, as described in the logs of `bitrise run share-this-step`
+<details>
+<summary>Outputs</summary>
 
-That's all ;)
+| Environment Variable | Description |
+| --- | --- |
+| `SSH_AUTH_SOCK` | If the `is_should_start_new_agent` option is enabled, and no accessible ssh-agent is found, the step will start a new ssh-agent.  This output environment variable will contain the path of the SSH Auth Socket, which can be used to access the started ssh-agent. |
+</details>
+
+## 🙋 Contributing
+
+We welcome [pull requests](https://github.com/bitrise-io/steps-activate-ssh-key/pulls) and [issues](https://github.com/bitrise-io/steps-activate-ssh-key/issues) against this repository.
+
+For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
+
+**Note:** this step's end-to-end tests (defined in `e2e/bitrise.yml`) are working with secrets which are intentionally not stored in this repo. External contributors won't be able to run those tests. Don't worry, if you open a PR with your contribution, we will help with running tests and make sure that they pass.
+
+Learn more about developing steps:
+
+- [Create your own step](https://devcenter.bitrise.io/contributors/create-your-own-step/)
+- [Testing your Step](https://devcenter.bitrise.io/contributors/testing-and-versioning-your-steps/)
