@@ -5,23 +5,22 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
-
-	"github.com/bitrise-steplib/steps-activate-ssh-key/filewriter"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/pathutil"
+	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/pathutil"
 )
 
 // Agent ...
 type Agent struct {
-	fileWriter      filewriter.FileWriter
+	fileWriter      fileutil.FileWriter
 	tempDirProvider pathutil.TempDirProvider
 	logger          log.Logger
 	cmdFactory      command.Factory
 }
 
 // NewAgent ...
-func NewAgent(fileWriter filewriter.FileWriter, tempDirProvider pathutil.TempDirProvider, logger log.Logger, cmdFactory command.Factory) *Agent {
+func NewAgent(fileWriter fileutil.FileWriter, tempDirProvider pathutil.TempDirProvider, logger log.Logger, cmdFactory command.Factory) *Agent {
 	return &Agent{fileWriter: fileWriter, tempDirProvider: tempDirProvider, logger: logger, cmdFactory: cmdFactory}
 }
 

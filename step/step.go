@@ -6,10 +6,9 @@ import (
 
 	"github.com/bitrise-io/go-steputils/step"
 	"github.com/bitrise-io/go-steputils/stepconf"
-	globallog "github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/env"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/filewriter"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/log"
+	"github.com/bitrise-io/go-utils/env"
+	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-utils/log"
 )
 
 // Input ...
@@ -67,13 +66,13 @@ type SSHKeyAgent interface {
 type ActivateSSHKey struct {
 	stepInputParser InputParser
 	envRepository   env.Repository
-	fileWriter      filewriter.FileWriter
+	fileWriter      fileutil.FileWriter
 	sshKeyAgent     SSHKeyAgent
 	logger          log.Logger
 }
 
 // NewActivateSSHKey ...
-func NewActivateSSHKey(stepInputParse InputParser, envRepository env.Repository, fileWriter filewriter.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
+func NewActivateSSHKey(stepInputParse InputParser, envRepository env.Repository, fileWriter fileutil.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
 	return &ActivateSSHKey{stepInputParser: stepInputParse, envRepository: envRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
 }
 
@@ -94,7 +93,7 @@ func (a ActivateSSHKey) ProcessConfig() (Config, error) {
 
 // Run ...
 func (a ActivateSSHKey) Run(cfg Config) (Result, error) {
-	globallog.SetEnableDebugLog(cfg.verbose)
+	log.SetEnableDebugLog(cfg.verbose)
 	if err := a.clearSSHKeys(string(cfg.sshRsaPrivateKey)); err != nil {
 		return Result{}, err
 	}
@@ -128,8 +127,8 @@ func splitEnv(env string) (string, string) {
 }
 
 func (a ActivateSSHKey) clearSSHKeys(privateKey string) error {
-	for _, env := range a.envRepository.List() {
-		key, value := splitEnv(env)
+	for _, e := range a.envRepository.List() {
+		key, value := splitEnv(e)
 
 		if value == privateKey {
 			if err := a.envRepository.Unset(key); err != nil {

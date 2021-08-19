@@ -1,21 +1,24 @@
 package main
 
 import (
-	"github.com/bitrise-steplib/steps-activate-ssh-key/pathutil"
 	"os"
 
+	"github.com/bitrise-io/go-steputils/stepenv"
+	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/env"
+	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/command"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/env"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/filewriter"
-	localLogger "github.com/bitrise-steplib/steps-activate-ssh-key/log"
+	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/step"
 )
 
+// TODO debug log config? os.GetEnv? late init?
+var logger = log.NewLogger(false)
+
 func main() {
 	if err := run(); err != nil {
-		log.Errorf("Step run failed: %s", err.Error())
+		logger.Errorf("Step run failed: %s", err.Error())
 		os.Exit(1)
 	}
 }
@@ -37,17 +40,11 @@ func run() error {
 }
 
 func createActivateSSHKey() *step.ActivateSSHKey {
-	logger := localLogger.NewDefaultLogger()
-
-	fileWriter := filewriter.NewOsFileWriter()
-	tempDirProvider := pathutil.NewOsTempDirProvider()
-	osEnvRepository := env.NewOsRepository()
-	cmdFactory := command.NewDefaultFactory(osEnvRepository)
+	fileWriter := fileutil.NewFileWriter()
+	tempDirProvider := pathutil.NewTempDirProvider()
+	envRepository := stepenv.NewRepository(env.NewRepository())
+	cmdFactory := command.NewFactory(envRepository)
 	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
-
 	stepInputParser := step.NewEnvInputParser()
-	envmanEnvRepository := env.NewEnvmanRepository()
-	envRepository := env.NewRepository(osEnvRepository, envmanEnvRepository)
-
 	return step.NewActivateSSHKey(stepInputParser, envRepository, fileWriter, *agent, logger)
 }

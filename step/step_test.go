@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/bitrise-steplib/steps-activate-ssh-key/step/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -16,15 +17,15 @@ func Test_GivenFailingSSHAgent_WhenStepRuns_ThenSSHAgentGetsRestartedAndSSHKeyGe
 	// Given
 	logger := createLogger()
 
-	envRepository := new(MockRepository)
+	envRepository := new(mocks.Repository)
 	envRepository.On("List").Return(nil)
 
-	fileWriter := new(MockFileWriter)
+	fileWriter := new(mocks.FileWriter)
 	fileWriter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	config := createConfigWithDefaults()
 
-	sshKeyAgent := new(MockSSHKeyAgent)
+	sshKeyAgent := new(mocks.SSHKeyAgent)
 	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything, mock.Anything).Return(nil).Once()
@@ -44,14 +45,14 @@ func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 	// Given
 	logger := createLogger()
 
-	envRepository := new(MockRepository)
+	envRepository := new(mocks.Repository)
 	envRepository.On("List").Return([]string{envKey + "=" + privateKey})
 	envRepository.On("Unset", mock.Anything).Return(nil)
 
 	fileWriter := createFileWriter()
 	config := createConfigWithDefaults()
 
-	sshKeyAgent := new(MockSSHKeyAgent)
+	sshKeyAgent := new(mocks.SSHKeyAgent)
 	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything, mock.Anything).Return(nil).Once()
@@ -70,12 +71,12 @@ func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 func Test_GivenSSHKeyAddFails_WhenStepRuns_ThenItFails(t *testing.T) {
 	// Given
 	logger := createLogger()
-	envRepository := new(MockRepository)
+	envRepository := new(mocks.Repository)
 	envRepository.On("List").Return(nil)
 	fileWriter := createFileWriter()
 	config := createConfigWithDefaults()
 
-	sshKeyAgent := new(MockSSHKeyAgent)
+	sshKeyAgent := new(mocks.SSHKeyAgent)
 	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything, mock.Anything).Return(errors.New("mocked error")).Once()
@@ -97,14 +98,14 @@ func Test_GivenSSHKeyAddFails_WhenStepRuns_ThenItFails(t *testing.T) {
 	assert.Equal(t, wantErr, err)
 }
 
-func createFileWriter() (fileWriter *MockFileWriter) {
-	fileWriter = new(MockFileWriter)
+func createFileWriter() (fileWriter *mocks.FileWriter) {
+	fileWriter = new(mocks.FileWriter)
 	fileWriter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	return
 }
 
-func createLogger() (logger *MockLogger) {
-	logger = new(MockLogger)
+func createLogger() (logger *mocks.Logger) {
+	logger = new(mocks.Logger)
 	logger.On("Debugf", mock.Anything, mock.Anything).Return()
 	logger.On("Donef", mock.Anything, mock.Anything).Return()
 	logger.On("Printf", mock.Anything, mock.Anything).Return()
