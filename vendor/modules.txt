@@ -1,4 +1,4 @@
-# github.com/bitrise-io/go-steputils v0.0.0-20210819160416-da01673af260
+# github.com/bitrise-io/go-steputils v0.0.0-20210823153402-11965560f183
 ## explicit
 github.com/bitrise-io/go-steputils/step
 github.com/bitrise-io/go-steputils/stepconf

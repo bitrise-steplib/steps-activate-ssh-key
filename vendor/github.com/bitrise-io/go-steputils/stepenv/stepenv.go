@@ -1,8 +1,6 @@
 package stepenv
 
 import (
-	"os"
-
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/env"
 )
@@ -23,7 +21,7 @@ func (r defaultRepository) Get(key string) string {
 
 // Set ...
 func (r defaultRepository) Set(key, value string) error {
-	if err := os.Setenv(key, value); err != nil {
+	if err := r.osRepository.Set(key, value); err != nil {
 		return err
 	}
 	return tools.ExportEnvironmentWithEnvman(key, value)
