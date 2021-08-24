@@ -90,10 +90,15 @@ func (a Agent) AddKey(sshKeyPth, socket string) error {
 		return fmt.Errorf("failed to write the SSH key to the provided path, %s", err)
 	}
 
+	var envs []string
+	if socket != "" {
+		envs = append(envs, "SSH_AUTH_SOCK="+socket)
+	}
+
 	cmd := a.cmdFactory.Create("bash", []string{"-c", filePth}, &command.Opts{
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
-		Env:    []string{"SSH_AUTH_SOCK=" + socket},
+		Env:    envs,
 	})
 
 	a.logger.Println()
