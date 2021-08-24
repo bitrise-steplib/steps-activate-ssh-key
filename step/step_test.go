@@ -6,6 +6,9 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
+	mockenv "github.com/bitrise-io/go-utils/env/mocks"
+	mockfileutil "github.com/bitrise-io/go-utils/fileutil/mocks"
+	mocklog "github.com/bitrise-io/go-utils/log/mocks"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/step/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -18,10 +21,10 @@ func Test_GivenFailingSSHAgent_WhenStepRuns_ThenSSHAgentGetsRestartedAndSSHKeyGe
 	// Given
 	logger := createLogger()
 
-	envRepository := new(mocks.Repository)
+	envRepository := new(mockenv.Repository)
 	envRepository.On("List").Return(nil)
 
-	fileWriter := new(mocks.FileWriter)
+	fileWriter := new(mockfileutil.FileWriter)
 	fileWriter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	config := createConfigWithDefaults()
@@ -46,7 +49,7 @@ func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 	// Given
 	logger := createLogger()
 
-	envRepository := new(mocks.Repository)
+	envRepository := new(mockenv.Repository)
 	envRepository.On("List").Return([]string{envKey + "=" + privateKey})
 	envRepository.On("Unset", mock.Anything).Return(nil)
 
@@ -72,7 +75,7 @@ func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 func Test_GivenSSHKeyAddFails_WhenStepRuns_ThenItFails(t *testing.T) {
 	// Given
 	logger := createLogger()
-	envRepository := new(mocks.Repository)
+	envRepository := new(mockenv.Repository)
 	envRepository.On("List").Return(nil)
 	fileWriter := createFileWriter()
 	config := createConfigWithDefaults()
@@ -99,14 +102,14 @@ func Test_GivenSSHKeyAddFails_WhenStepRuns_ThenItFails(t *testing.T) {
 	assert.Equal(t, wantErr, err)
 }
 
-func createFileWriter() (fileWriter *mocks.FileWriter) {
-	fileWriter = new(mocks.FileWriter)
+func createFileWriter() (fileWriter *mockfileutil.FileWriter) {
+	fileWriter = new(mockfileutil.FileWriter)
 	fileWriter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	return
 }
 
-func createLogger() (logger *mocks.Logger) {
-	logger = new(mocks.Logger)
+func createLogger() (logger *mocklog.Logger) {
+	logger = new(mocklog.Logger)
 	logger.On("Debugf", mock.Anything, mock.Anything).Return()
 	logger.On("Donef", mock.Anything, mock.Anything).Return()
 	logger.On("Printf", mock.Anything, mock.Anything).Return()
