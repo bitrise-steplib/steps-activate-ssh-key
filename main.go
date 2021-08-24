@@ -13,38 +13,37 @@ import (
 	"github.com/bitrise-steplib/steps-activate-ssh-key/step"
 )
 
-// TODO debug log config? os.GetEnv? late init?
-var logger = log.NewLogger(false)
-
 func main() {
-	if err := run(); err != nil {
-		logger.Errorf("Step run failed: %s", err.Error())
-		os.Exit(1)
-	}
+	os.Exit(run())
 }
 
-func run() error {
-	activateSSHKey := createActivateSSHKey()
-	config, err := activateSSHKey.ProcessConfig()
-	if err != nil {
-		return err
-	}
-	result, err := activateSSHKey.Run(config)
-	if err != nil {
-		return err
-	}
-	if err := activateSSHKey.Export(result); err != nil {
-		return err
-	}
-	return nil
-}
-
-func createActivateSSHKey() *step.ActivateSSHKey {
+func run() int {
+	logger := log.NewLogger()
 	fileWriter := fileutil.NewFileWriter()
 	tempDirProvider := pathutil.NewTempDirProvider()
 	envRepository := stepenv.NewRepository(env.NewRepository())
 	cmdFactory := command.NewFactory(envRepository)
 	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
 	stepInputParser := step.NewEnvInputParser()
-	return step.NewActivateSSHKey(stepInputParser, envRepository, fileWriter, *agent, logger)
+
+	sshKeyActivator := step.NewActivateSSHKey(stepInputParser, envRepository, fileWriter, *agent, logger)
+
+	config, err := sshKeyActivator.ProcessConfig()
+	if err != nil {
+		logger.Errorf(err.Error())
+		return 1
+	}
+
+	result, err := sshKeyActivator.Run(config)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return 1
+	}
+
+	if err := sshKeyActivator.Export(result); err != nil {
+		logger.Errorf(err.Error())
+		return 1
+	}
+
+	return 0
 }

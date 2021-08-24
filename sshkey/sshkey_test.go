@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -14,7 +13,9 @@ import (
 
 func Test_WhenSSHKeyIsAdded_ThenItCallsSSHAddScript(t *testing.T) {
 	// Given
-	logger := log.NewLogger(false)
+	logger := new(mocks.Logger)
+	logger.On("Printf", mock.Anything, mock.Anything).Return()
+	logger.On("Println").Return()
 
 	sshKeyPth := "ssh-key-path"
 	tmpDir := "temp-dir"

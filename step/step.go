@@ -93,7 +93,8 @@ func (a ActivateSSHKey) ProcessConfig() (Config, error) {
 
 // Run ...
 func (a ActivateSSHKey) Run(cfg Config) (Result, error) {
-	log.SetEnableDebugLog(cfg.verbose)
+	a.logger.EnableDebugLog(cfg.verbose)
+
 	if err := a.clearSSHKeys(string(cfg.sshRsaPrivateKey)); err != nil {
 		return Result{}, err
 	}
