@@ -111,6 +111,7 @@ func createLogger() (logger *mocks.Logger) {
 	logger.On("Printf", mock.Anything, mock.Anything).Return()
 	logger.On("Errorf", mock.Anything, mock.Anything).Return()
 	logger.On("Println").Return()
+	logger.On("EnableDebugLog", mock.Anything).Return()
 	return
 }
 
