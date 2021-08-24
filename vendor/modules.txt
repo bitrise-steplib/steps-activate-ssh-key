@@ -4,7 +4,7 @@ github.com/bitrise-io/go-steputils/step
 github.com/bitrise-io/go-steputils/stepconf
 github.com/bitrise-io/go-steputils/stepenv
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20210824064121-40bc51d32017
+# github.com/bitrise-io/go-utils v0.0.0-20210824090559-1ad6c10c0a62
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
