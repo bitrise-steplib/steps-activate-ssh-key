@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/command/mocks"
 	mockcommand "github.com/bitrise-io/go-utils/command/mocks"
 	mockfileutil "github.com/bitrise-io/go-utils/fileutil/mocks"
 	mocklog "github.com/bitrise-io/go-utils/log/mocks"
@@ -35,7 +34,7 @@ func Test_WhenSSHKeyIsAdded_ThenItCallsSSHAddScript(t *testing.T) {
 	cmd.On("RunAndReturnExitCode").Return(0, nil)
 	cmd.On("PrintableCommandArgs").Return("")
 
-	factory := new(mocks.Factory)
+	factory := new(mockcommand.Factory)
 	factory.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(cmd)
 
 	agent := NewAgent(fileWriter, tempDirProvider, logger, factory)
