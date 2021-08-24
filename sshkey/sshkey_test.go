@@ -6,14 +6,17 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey/mocks"
+	mockcommand "github.com/bitrise-io/go-utils/command/mocks"
+	mockfileutil "github.com/bitrise-io/go-utils/fileutil/mocks"
+	mocklog "github.com/bitrise-io/go-utils/log/mocks"
+	mockpathutil "github.com/bitrise-io/go-utils/pathutil/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func Test_WhenSSHKeyIsAdded_ThenItCallsSSHAddScript(t *testing.T) {
 	// Given
-	logger := new(mocks.Logger)
+	logger := new(mocklog.Logger)
 	logger.On("Printf", mock.Anything, mock.Anything).Return()
 	logger.On("Println").Return()
 
@@ -21,17 +24,17 @@ func Test_WhenSSHKeyIsAdded_ThenItCallsSSHAddScript(t *testing.T) {
 	tmpDir := "temp-dir"
 	sshAddScriptPth := filepath.Join(tmpDir, addSSHKeyScriptFileName)
 
-	tempDirProvider := new(mocks.TempDirProvider)
+	tempDirProvider := new(mockpathutil.TempDirProvider)
 	tempDirProvider.On("CreateTempDir", mock.Anything).Return(tmpDir, nil)
 
-	fileWriter := new(mocks.FileWriter)
+	fileWriter := new(mockfileutil.FileWriter)
 	fileWriter.On("Write", sshAddScriptPth, createAddSSHKeyScript(sshKeyPth), mock.Anything).Return(nil)
 
-	cmd := new(mocks.Command)
+	cmd := new(mockcommand.Command)
 	cmd.On("RunAndReturnExitCode").Return(0, nil)
 	cmd.On("PrintableCommandArgs").Return("")
 
-	factory := new(mocks.Factory)
+	factory := new(mockcommand.Factory)
 	factory.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(cmd)
 
 	agent := NewAgent(fileWriter, tempDirProvider, logger, factory)
