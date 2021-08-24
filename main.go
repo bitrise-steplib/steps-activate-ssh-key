@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/stepenv"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/env"
@@ -24,9 +25,9 @@ func run() int {
 	envRepository := stepenv.NewRepository(env.NewRepository())
 	cmdFactory := command.NewFactory(envRepository)
 	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
-	stepInputParser := step.NewEnvInputParser()
+	inputParser := stepconf.NewDefaultEnvParser()
 
-	sshKeyActivator := step.NewActivateSSHKey(stepInputParser, envRepository, fileWriter, *agent, logger)
+	sshKeyActivator := step.NewActivateSSHKey(inputParser, envRepository, fileWriter, *agent, logger)
 
 	config, err := sshKeyActivator.ProcessConfig()
 	if err != nil {

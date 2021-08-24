@@ -32,27 +32,6 @@ type Result struct {
 	sshAuthSock string
 }
 
-// InputParser ...
-type InputParser interface {
-	Parse() (Input, error)
-}
-
-type envInputParser struct{}
-
-// NewEnvInputParser ...
-func NewEnvInputParser() InputParser {
-	return envInputParser{}
-}
-
-// Parse ...
-func (envInputParser) Parse() (Input, error) {
-	var i Input
-	if err := stepconf.Parse(&i); err != nil {
-		return Input{}, err
-	}
-	return i, nil
-}
-
 // SSHKeyAgent ...
 type SSHKeyAgent interface {
 	Start() (string, error)
@@ -64,21 +43,22 @@ type SSHKeyAgent interface {
 
 // ActivateSSHKey ...
 type ActivateSSHKey struct {
-	stepInputParser InputParser
-	envRepository   env.Repository
-	fileWriter      fileutil.FileWriter
-	sshKeyAgent     SSHKeyAgent
-	logger          log.Logger
+	inputParser   stepconf.EnvParser
+	envRepository env.Repository
+	fileWriter    fileutil.FileWriter
+	sshKeyAgent   SSHKeyAgent
+	logger        log.Logger
 }
 
 // NewActivateSSHKey ...
-func NewActivateSSHKey(stepInputParse InputParser, envRepository env.Repository, fileWriter fileutil.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
-	return &ActivateSSHKey{stepInputParser: stepInputParse, envRepository: envRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
+func NewActivateSSHKey(inputParser stepconf.EnvParser, envRepository env.Repository, fileWriter fileutil.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
+	return &ActivateSSHKey{inputParser: inputParser, envRepository: envRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
 }
 
 // ProcessConfig ...
 func (a ActivateSSHKey) ProcessConfig() (Config, error) {
-	input, err := a.stepInputParser.Parse()
+	var input Input
+	err := a.inputParser.Parse(&input)
 	if err != nil {
 		return Config{}, err
 	}

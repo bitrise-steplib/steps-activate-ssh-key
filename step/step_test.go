@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/step/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -30,7 +31,7 @@ func Test_GivenFailingSSHAgent_WhenStepRuns_ThenSSHAgentGetsRestartedAndSSHKeyGe
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything, mock.Anything).Return(nil).Once()
 
-	step := NewActivateSSHKey(nil, envRepository, fileWriter, sshKeyAgent, logger)
+	step := NewActivateSSHKey(stepconf.NewDefaultEnvParser(), envRepository, fileWriter, sshKeyAgent, logger)
 
 	// When
 	_, err := step.Run(config)
@@ -57,7 +58,7 @@ func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything, mock.Anything).Return(nil).Once()
 
-	step := NewActivateSSHKey(nil, envRepository, fileWriter, sshKeyAgent, logger)
+	step := NewActivateSSHKey(stepconf.NewDefaultEnvParser(), envRepository, fileWriter, sshKeyAgent, logger)
 
 	// When
 	output, err := step.Run(config)
@@ -81,7 +82,7 @@ func Test_GivenSSHKeyAddFails_WhenStepRuns_ThenItFails(t *testing.T) {
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything, mock.Anything).Return(errors.New("mocked error")).Once()
 
-	step := NewActivateSSHKey(nil, envRepository, fileWriter, sshKeyAgent, logger)
+	step := NewActivateSSHKey(stepconf.NewDefaultEnvParser(), envRepository, fileWriter, sshKeyAgent, logger)
 
 	// When
 	output, err := step.Run(config)
