@@ -1,4 +1,4 @@
-# github.com/bitrise-io/go-steputils v0.0.0-20210823153402-11965560f183
+# github.com/bitrise-io/go-steputils v0.0.0-20210824140209-e19983be529f
 ## explicit
 github.com/bitrise-io/go-steputils/step
 github.com/bitrise-io/go-steputils/stepconf
@@ -26,6 +26,7 @@ github.com/davecgh/go-spew/spew
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/objx v0.3.0
+## explicit
 github.com/stretchr/objx
 # github.com/stretchr/testify v1.7.0
 ## explicit
@@ -34,4 +35,5 @@ github.com/stretchr/testify/mock
 # gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 ## explicit
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+## explicit
 gopkg.in/yaml.v3
