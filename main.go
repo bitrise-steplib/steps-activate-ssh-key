@@ -22,12 +22,13 @@ func run() int {
 	logger := log.NewLogger()
 	fileWriter := fileutil.NewFileWriter()
 	tempDirProvider := pathutil.NewTempDirProvider()
-	envRepository := stepenv.NewRepository(env.NewRepository())
+	envRepository := env.NewRepository()
+	stepEnvRepository := stepenv.NewRepository(envRepository)
 	cmdFactory := command.NewFactory(envRepository)
 	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
-	inputParser := stepconf.NewDefaultEnvParser()
+	inputParser := stepconf.NewInputParser(envRepository)
 
-	sshKeyActivator := step.NewActivateSSHKey(inputParser, envRepository, fileWriter, *agent, logger)
+	sshKeyActivator := step.NewActivateSSHKey(inputParser, stepEnvRepository, fileWriter, *agent, logger)
 
 	config, err := sshKeyActivator.ProcessConfig()
 	if err != nil {

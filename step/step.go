@@ -43,7 +43,7 @@ type SSHKeyAgent interface {
 
 // ActivateSSHKey ...
 type ActivateSSHKey struct {
-	inputParser   stepconf.EnvParser
+	inputParser   stepconf.InputParser
 	envRepository env.Repository
 	fileWriter    fileutil.FileWriter
 	sshKeyAgent   SSHKeyAgent
@@ -51,7 +51,7 @@ type ActivateSSHKey struct {
 }
 
 // NewActivateSSHKey ...
-func NewActivateSSHKey(inputParser stepconf.EnvParser, envRepository env.Repository, fileWriter fileutil.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
+func NewActivateSSHKey(inputParser stepconf.InputParser, envRepository env.Repository, fileWriter fileutil.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
 	return &ActivateSSHKey{inputParser: inputParser, envRepository: envRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
 }
 

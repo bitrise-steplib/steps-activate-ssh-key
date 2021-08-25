@@ -1,12 +1,5 @@
-github.com/bitrise-io/go-steputils v0.0.0-20210823153402-11965560f183 h1:ZzEx0FjhA2BP7EwB19Ae7+odM05/NN8yPb3Gr7BYHFA=
-github.com/bitrise-io/go-steputils v0.0.0-20210823153402-11965560f183/go.mod h1:ScYlk2FYMDmJ2Tb69LVNgPqlU5MgHpc1pbIyx9JxZ8Q=
-github.com/bitrise-io/go-utils v0.0.0-20210819143908-bbd923881fab/go.mod h1:UprBoSn6HxcN9G7yGRSOoe9bSZLh7gLl4yA0/iqwYsI=
-github.com/bitrise-io/go-utils v0.0.0-20210824090559-1ad6c10c0a62 h1:hjf6DZ3lcwrv6BW3I8Bo7PzwMNY/9sRBANJ3InK2zH8=
-github.com/bitrise-io/go-utils v0.0.0-20210824090559-1ad6c10c0a62/go.mod h1:UprBoSn6HxcN9G7yGRSOoe9bSZLh7gLl4yA0/iqwYsI=
-github.com/bitrise-io/go-utils v0.0.0-20210824110433-3de05cc69f7c h1:CJukqgSqxXNVuIW5rF3ALHg2Z/kdqLjzhPRFUHGz9cQ=
-github.com/bitrise-io/go-utils v0.0.0-20210824110433-3de05cc69f7c/go.mod h1:Vi4MHnaZVL3PVoPPA/Yp6g2pzntkDH8LGiRSY7qw6KQ=
-github.com/bitrise-io/go-utils v0.0.0-20210824110800-c36ae4e93a9b h1:Dqfr+7mtP73d8hCLf+TcTaoualKNcD8HpNLDLGnvsOg=
-github.com/bitrise-io/go-utils v0.0.0-20210824110800-c36ae4e93a9b/go.mod h1:Vi4MHnaZVL3PVoPPA/Yp6g2pzntkDH8LGiRSY7qw6KQ=
+github.com/bitrise-io/go-steputils v0.0.0-20210824140209-e19983be529f h1:ywt2iuLd7wORly2idwyXC7SQJkgkMsgvaiNCvcJ40VM=
+github.com/bitrise-io/go-steputils v0.0.0-20210824140209-e19983be529f/go.mod h1:F+FPN4MS73h+m+8DYL1FyqEK4O1PqSdEpA1Pccp1LN0=
 github.com/bitrise-io/go-utils v0.0.0-20210824130242-27933dca637a h1:GGayUYP5I8SXOGFeGbFE9KB4n0hF+HT4n9eoCVMX0yY=
 github.com/bitrise-io/go-utils v0.0.0-20210824130242-27933dca637a/go.mod h1:Vi4MHnaZVL3PVoPPA/Yp6g2pzntkDH8LGiRSY7qw6KQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -14,7 +7,6 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/hashicorp/go-cleanhttp v0.5.1/go.mod h1:JpRdi6/HCYpAwUzNwuwqhbovhLtngrth3wmdIIUrZ80=
 github.com/hashicorp/go-hclog v0.9.2/go.mod h1:5CU+agLiy3J7N7QjHK5d05KxGsuXiQLrjA0H7acj2lQ=
-github.com/hashicorp/go-retryablehttp v0.6.6/go.mod h1:vAew36LZh98gCBJNLH42IQ1ER/9wtLZZ8meHqQvEYWY=
 github.com/hashicorp/go-retryablehttp v0.7.0/go.mod h1:vAew36LZh98gCBJNLH42IQ1ER/9wtLZZ8meHqQvEYWY=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
@@ -34,9 +26,7 @@ golang.org/x/crypto v0.0.0-20210817164053-32db794688a5/go.mod h1:GvvjBRRGRdwPK5y
 golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.0.0-20210819072135-bce67f096156/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
-golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=
 golang.org/x/text v0.3.3/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
