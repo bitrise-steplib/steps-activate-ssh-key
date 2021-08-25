@@ -1,14 +1,39 @@
-# github.com/bitrise-io/go-steputils v0.0.0-20210527075147-910ce7a105a1
+# github.com/bitrise-io/go-steputils v0.0.0-20210824140209-e19983be529f
 ## explicit
 github.com/bitrise-io/go-steputils/step
 github.com/bitrise-io/go-steputils/stepconf
+github.com/bitrise-io/go-steputils/stepenv
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20210713111255-08be784d45d0
+# github.com/bitrise-io/go-utils v0.0.0-20210824130242-27933dca637a
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
+github.com/bitrise-io/go-utils/command/mocks
+github.com/bitrise-io/go-utils/env
+github.com/bitrise-io/go-utils/env/mocks
 github.com/bitrise-io/go-utils/fileutil
+github.com/bitrise-io/go-utils/fileutil/mocks
 github.com/bitrise-io/go-utils/log
+github.com/bitrise-io/go-utils/log/mocks
 github.com/bitrise-io/go-utils/parseutil
 github.com/bitrise-io/go-utils/pathutil
+github.com/bitrise-io/go-utils/pathutil/mocks
 github.com/bitrise-io/go-utils/pointers
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/kr/pretty v0.1.0
+## explicit
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/objx v0.3.0
+## explicit
+github.com/stretchr/objx
+# github.com/stretchr/testify v1.7.0
+## explicit
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/mock
+# gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
+## explicit
+# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+## explicit
+gopkg.in/yaml.v3

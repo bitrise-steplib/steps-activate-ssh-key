@@ -1,29 +1,51 @@
 package main
 
 import (
-	"fmt"
+	"os"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
+	"github.com/bitrise-io/go-steputils/stepenv"
+	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/env"
+	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/activatesshkey"
+	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/step"
 )
 
 func main() {
-	var cfg activatesshkey.Config
-	if err := stepconf.Parse(&cfg); err != nil {
-		failf("Issue with input: %s", err)
+	os.Exit(run())
+}
+
+func run() int {
+	logger := log.NewLogger()
+	fileWriter := fileutil.NewFileWriter()
+	tempDirProvider := pathutil.NewTempDirProvider()
+	envRepository := env.NewRepository()
+	stepEnvRepository := stepenv.NewRepository(envRepository)
+	cmdFactory := command.NewFactory(envRepository)
+	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
+	inputParser := stepconf.NewInputParser(envRepository)
+
+	sshKeyActivator := step.NewActivateSSHKey(inputParser, stepEnvRepository, fileWriter, agent, logger)
+
+	config, err := sshKeyActivator.ProcessConfig()
+	if err != nil {
+		logger.Errorf(err.Error())
+		return 1
 	}
 
-	stepconf.Print(cfg)
-	fmt.Println()
-
-	log.SetEnableDebugLog(cfg.Verbose)
-
-	if err := activatesshkey.Execute(activatesshkey.Config{
-		SSHRsaPrivateKey:        cfg.SSHRsaPrivateKey,
-		SSHKeySavePath:          cfg.SSHKeySavePath,
-		IsRemoveOtherIdentities: cfg.IsRemoveOtherIdentities,
-	}); err != nil {
-		failf(err.Error())
+	result, err := sshKeyActivator.Run(config)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return 1
 	}
+
+	if err := sshKeyActivator.Export(result); err != nil {
+		logger.Errorf(err.Error())
+		return 1
+	}
+
+	return 0
 }
