@@ -28,7 +28,7 @@ func run() int {
 	agent := sshkey.NewAgent(fileWriter, tempDirProvider, logger, cmdFactory)
 	inputParser := stepconf.NewInputParser(envRepository)
 
-	sshKeyActivator := step.NewActivateSSHKey(inputParser, stepEnvRepository, fileWriter, *agent, logger)
+	sshKeyActivator := step.NewActivateSSHKey(inputParser, stepEnvRepository, fileWriter, agent, logger)
 
 	config, err := sshKeyActivator.ProcessConfig()
 	if err != nil {

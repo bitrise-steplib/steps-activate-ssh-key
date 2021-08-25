@@ -12,7 +12,15 @@ import (
 )
 
 // Agent ...
-type Agent struct {
+type Agent interface {
+	Start() (string, error)
+	Kill() (int, error)
+	ListKeys() (int, error)
+	AddKey(sshKeyPth, socket string) error
+	DeleteKeys() error
+}
+
+type defaultAgent struct {
 	fileWriter      fileutil.FileWriter
 	tempDirProvider pathutil.TempDirProvider
 	logger          log.Logger
@@ -20,12 +28,12 @@ type Agent struct {
 }
 
 // NewAgent ...
-func NewAgent(fileWriter fileutil.FileWriter, tempDirProvider pathutil.TempDirProvider, logger log.Logger, cmdFactory command.Factory) *Agent {
-	return &Agent{fileWriter: fileWriter, tempDirProvider: tempDirProvider, logger: logger, cmdFactory: cmdFactory}
+func NewAgent(fileWriter fileutil.FileWriter, tempDirProvider pathutil.TempDirProvider, logger log.Logger, cmdFactory command.Factory) Agent {
+	return defaultAgent{fileWriter: fileWriter, tempDirProvider: tempDirProvider, logger: logger, cmdFactory: cmdFactory}
 }
 
 // Start ...
-func (a Agent) Start() (string, error) {
+func (a defaultAgent) Start() (string, error) {
 	cmd := a.cmdFactory.Create("ssh-agent", nil, nil)
 
 	a.logger.Println()
@@ -35,7 +43,7 @@ func (a Agent) Start() (string, error) {
 }
 
 // Kill ...
-func (a Agent) Kill() (int, error) {
+func (a defaultAgent) Kill() (int, error) {
 	// try to kill the agent
 	cmd := a.cmdFactory.Create("ssh-agent", []string{"-k"}, &command.Opts{
 		Stdout: os.Stdout,
@@ -49,7 +57,7 @@ func (a Agent) Kill() (int, error) {
 }
 
 // ListKeys ...
-func (a Agent) ListKeys() (int, error) {
+func (a defaultAgent) ListKeys() (int, error) {
 	cmd := a.cmdFactory.Create("ssh-add", []string{"-l"}, &command.Opts{
 		Stderr: os.Stderr,
 	})
@@ -79,7 +87,7 @@ fi`, sshKeyPth)
 const addSSHKeyScriptFileName = "tmp_spawn.sh"
 
 // AddKey ...
-func (a Agent) AddKey(sshKeyPth, socket string) error {
+func (a defaultAgent) AddKey(sshKeyPth, socket string) error {
 	pth, err := a.tempDirProvider.CreateTempDir("spawn")
 	if err != nil {
 		return err
@@ -119,7 +127,7 @@ func (a Agent) AddKey(sshKeyPth, socket string) error {
 }
 
 // DeleteKeys ...
-func (a Agent) DeleteKeys() error {
+func (a defaultAgent) DeleteKeys() error {
 	// remove all keys from the current agent
 	cmd := a.cmdFactory.Create("ssh-add", []string{"-D"}, &command.Opts{
 		Stdout: os.Stdout,

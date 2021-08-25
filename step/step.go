@@ -9,6 +9,7 @@ import (
 	"github.com/bitrise-io/go-utils/env"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 )
 
 // Input ...
@@ -32,26 +33,17 @@ type Result struct {
 	sshAuthSock string
 }
 
-// SSHKeyAgent ...
-type SSHKeyAgent interface {
-	Start() (string, error)
-	Kill() (int, error)
-	ListKeys() (int, error)
-	AddKey(sshKeyPth, socket string) error
-	DeleteKeys() error
-}
-
 // ActivateSSHKey ...
 type ActivateSSHKey struct {
 	inputParser   stepconf.InputParser
 	envRepository env.Repository
 	fileWriter    fileutil.FileWriter
-	sshKeyAgent   SSHKeyAgent
+	sshKeyAgent   sshkey.Agent
 	logger        log.Logger
 }
 
 // NewActivateSSHKey ...
-func NewActivateSSHKey(inputParser stepconf.InputParser, envRepository env.Repository, fileWriter fileutil.FileWriter, agent SSHKeyAgent, logger log.Logger) *ActivateSSHKey {
+func NewActivateSSHKey(inputParser stepconf.InputParser, envRepository env.Repository, fileWriter fileutil.FileWriter, agent sshkey.Agent, logger log.Logger) *ActivateSSHKey {
 	return &ActivateSSHKey{inputParser: inputParser, envRepository: envRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
 }
 
