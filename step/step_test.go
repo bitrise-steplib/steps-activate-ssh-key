@@ -8,7 +8,7 @@ import (
 	mockenv "github.com/bitrise-io/go-utils/env/mocks"
 	mockfileutil "github.com/bitrise-io/go-utils/fileutil/mocks"
 	mocklog "github.com/bitrise-io/go-utils/log/mocks"
-	"github.com/bitrise-steplib/steps-activate-ssh-key/step/mocks"
+	mocksshkey "github.com/bitrise-steplib/steps-activate-ssh-key/sshkey/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -28,7 +28,7 @@ func Test_GivenFailingSSHAgent_WhenStepRuns_ThenSSHAgentGetsRestartedAndSSHKeyGe
 
 	config := createConfigWithDefaults()
 
-	sshKeyAgent := new(mocks.SSHKeyAgent)
+	sshKeyAgent := new(mocksshkey.Agent)
 	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything, mock.Anything).Return(nil).Once()
@@ -55,7 +55,7 @@ func Test_WhenStepRuns_ThenPrivateKeyEnvGetsRemoved(t *testing.T) {
 	fileWriter := createFileWriter()
 	config := createConfigWithDefaults()
 
-	sshKeyAgent := new(mocks.SSHKeyAgent)
+	sshKeyAgent := new(mocksshkey.Agent)
 	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything, mock.Anything).Return(nil).Once()
@@ -79,7 +79,7 @@ func Test_GivenSSHKeyAddFails_WhenStepRuns_ThenItFails(t *testing.T) {
 	fileWriter := createFileWriter()
 	config := createConfigWithDefaults()
 
-	sshKeyAgent := new(mocks.SSHKeyAgent)
+	sshKeyAgent := new(mocksshkey.Agent)
 	sshKeyAgent.On("ListKeys").Return(2, errors.New("exit status 2")).Once()
 	sshKeyAgent.On("Start").Return("", nil)
 	sshKeyAgent.On("AddKey", mock.Anything, mock.Anything).Return(errors.New("mocked error")).Once()
