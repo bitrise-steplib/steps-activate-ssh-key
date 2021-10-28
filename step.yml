@@ -8,7 +8,7 @@ description: |-
   By default, you do not have to change anything about the Step's configuration. All you need to do is make sure that you registered your key pair on Bitrise and the public key at your Git provider. You can generate and register an SSH keypair in two ways.
 
   - Automatically during the [app creation process](https://devcenter.bitrise.io/getting-started/adding-a-new-app/#setting-up-ssh-keys).
-  - Manually during the app creation process or at any other time. You [generate your own SSH keys](https://devcenter.bitrise.io/faq/how-to-generate-ssh-keypair/) and register them on Bitrise and at your Git provider. The SSH key should not have a passphrase! 
+  - Manually during the app creation process or at any other time. You [generate your own SSH keys](https://devcenter.bitrise.io/faq/how-to-generate-ssh-keypair/) and register them on Bitrise and at your Git provider. The SSH key should not have a passphrase!
 
   Optionally, you can save the private key on the virtual machine. If a key already exists on the path you specified in the **(Optional) path to save the private key** input, it will be overwritten.
 
@@ -42,20 +42,20 @@ deps:
   apt_get:
   - name: expect
   - name: git
-run_if: ".IsCI"
+run_if: .IsCI
 
 toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-activate-ssh-key
 
 inputs:
-- ssh_rsa_private_key: "$SSH_RSA_PRIVATE_KEY"
+- ssh_rsa_private_key: $SSH_RSA_PRIVATE_KEY
   opts:
     title: SSH private key in RSA format
     is_expand: true
     is_dont_change_value: true
     is_sensitive: true
-- ssh_key_save_path: "$HOME/.ssh/bitrise_step_activate_ssh_key"
+- ssh_key_save_path: $HOME/.ssh/bitrise_step_activate_ssh_key
   opts:
     title: |-
       (Optional) path to save the private key.
@@ -72,13 +72,15 @@ inputs:
       * "true"
       * "false"
     is_expand: false
-    value_options: [ "true", "false" ]
+    value_options:
+    - "true"
+    - "false"
     is_dont_change_value: true
 - verbose: false
   opts:
     title: Enable verbose logging
-    summary: "Enable verbose log option for better debug"
-    description: "Enable verbose log option for better debug"
+    summary: Enable verbose log option for better debug
+    description: Enable verbose log option for better debug
     is_expand: true
     is_required: true
     value_options:
