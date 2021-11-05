@@ -29,12 +29,10 @@ description: |-
 website: https://github.com/bitrise-steplib/steps-activate-ssh-key
 source_code_url: https://github.com/bitrise-steplib/steps-activate-ssh-key
 support_url: https://github.com/bitrise-steplib/steps-activate-ssh-key/issues
-host_os_tags:
-- osx-10.9
+
 type_tags:
 - access-control
 
-requires_admin_user: false
 is_always_run: false
 is_skippable: false
 
@@ -51,32 +49,27 @@ toolkit:
 inputs:
 - ssh_rsa_private_key: $SSH_RSA_PRIVATE_KEY
   opts:
-    title: SSH private key in RSA format
+    title: SSH private key
+    summary: SSH private key in RSA format
     is_expand: true
     is_dont_change_value: true
     is_sensitive: true
 - ssh_key_save_path: $HOME/.ssh/bitrise_step_activate_ssh_key
   opts:
-    title: |-
-      (Optional) path to save the private key.
+    title: Private key save path
+    summary: (Optional) path to save the private key.
     is_expand: true
     is_dont_change_value: true
 - is_remove_other_identities: "true"
   opts:
     title: Remove other identities?
-    description: |-
-      (Optional) Remove other or previously loaded keys and restart ssh-agent?
-
-      Options:
-
-      * "true"
-      * "false"
+    summary: (Optional) Remove other or previously loaded keys and restart ssh-agent?
     is_expand: false
     value_options:
     - "true"
     - "false"
     is_dont_change_value: true
-- verbose: false
+- verbose: "false"
   opts:
     title: Enable verbose logging
     summary: Enable verbose log option for better debug
@@ -90,7 +83,7 @@ outputs:
 - SSH_AUTH_SOCK:
   opts:
     title: SSH Auth Socket info, in case the ssh-agent was started by this step
-    description: |-
+    summary: |-
       If the `is_should_start_new_agent` option is enabled, and no accessible
       ssh-agent is found, the step will start a new ssh-agent.
 
