@@ -76,7 +76,7 @@ inputs:
     - "true"
     - "false"
     is_dont_change_value: true
-- verbose: false
+- verbose: "false"
   opts:
     title: Enable verbose logging
     summary: Enable verbose log option for better debug
