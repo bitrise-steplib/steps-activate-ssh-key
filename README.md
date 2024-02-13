@@ -47,9 +47,9 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 
 | Key | Description | Flags | Default |
 | --- | --- | --- | --- |
-| `ssh_rsa_private_key` | The private key of the SSH keypair. | sensitive | `$SSH_RSA_PRIVATE_KEY` |
+| `ssh_rsa_private_key` | The private key of the SSH keypair in RSA format. | sensitive | `$SSH_RSA_PRIVATE_KEY` |
 | `ssh_key_save_path` | Path where the private key should be saved |  | `$HOME/.ssh/bitrise_step_activate_ssh_key` |
-| `is_remove_other_identities` | When the step detects a running SSH agent and this input is true, it removes all loaded identities and restarts the agent before loading the configured key.  Note: this only affects the in-memory SSH agent data, keys on disk are not touched.  Options:  * "true" * "false" |  | `true` |
+| `is_remove_other_identities` | When the step detects a running SSH agent and this input is true, it removes all loaded identities and restarts the agent before loading the configured key.  When there is no running SSH agent, this input has no effect.  Note: this only affects the in-memory SSH agent data, keys on disk are not touched.  Options:  * "true" * "false" |  | `true` |
 | `verbose` | Enable verbose log option for better debug | required | `false` |
 </details>
 

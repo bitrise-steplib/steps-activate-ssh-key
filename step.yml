@@ -69,6 +69,8 @@ inputs:
     description: |-
       When the step detects a running SSH agent and this input is true, it removes all loaded identities and restarts the agent before loading the configured key.
 
+      When there is no running SSH agent, this input has no effect.
+
       Note: this only affects the in-memory SSH agent data, keys on disk are not touched.
 
       Options:
