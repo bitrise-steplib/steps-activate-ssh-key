@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/fileutil"
+	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
 )
 
 // Agent ...
@@ -21,15 +21,15 @@ type Agent interface {
 }
 
 type defaultAgent struct {
-	fileWriter      fileutil.FileWriter
-	tempDirProvider pathutil.TempDirProvider
+	fileManager      fileutil.FileManager
+	tempDirProvider pathutil.PathProvider
 	logger          log.Logger
 	cmdFactory      command.Factory
 }
 
 // NewAgent ...
-func NewAgent(fileWriter fileutil.FileWriter, tempDirProvider pathutil.TempDirProvider, logger log.Logger, cmdFactory command.Factory) Agent {
-	return defaultAgent{fileWriter: fileWriter, tempDirProvider: tempDirProvider, logger: logger, cmdFactory: cmdFactory}
+func NewAgent(fileManager fileutil.FileManager, tempDirProvider pathutil.PathProvider, logger log.Logger, cmdFactory command.Factory) Agent {
+	return defaultAgent{fileManager: fileManager, tempDirProvider: tempDirProvider, logger: logger, cmdFactory: cmdFactory}
 }
 
 // Start ...
@@ -94,7 +94,7 @@ func (a defaultAgent) AddKey(sshKeyPth, socket string) error {
 	}
 
 	filePth := filepath.Join(pth, addSSHKeyScriptFileName)
-	if err := a.fileWriter.Write(filePth, createAddSSHKeyScript(sshKeyPth), 0770); err != nil {
+	if err := a.fileManager.Write(filePth, createAddSSHKeyScript(sshKeyPth), 0770); err != nil {
 		return fmt.Errorf("failed to write the SSH key to the provided path, %s", err)
 	}
 
