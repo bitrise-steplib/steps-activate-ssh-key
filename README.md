@@ -14,7 +14,7 @@ This Step makes sure Bitrise has access to your repository and thus able to clon
 By default, you do not have to change anything about the Step's configuration. All you need to do is make sure that you registered your key pair on Bitrise and the public key at your Git provider. You can generate and register an SSH keypair in two ways.
 
 - Automatically during the [app creation process](https://devcenter.bitrise.io/getting-started/adding-a-new-app/#setting-up-ssh-keys).
-- Manually during the app creation process or at any other time. You [generate your own SSH keys](https://devcenter.bitrise.io/faq/how-to-generate-ssh-keypair/) and register them on Bitrise and at your Git provider. The SSH key should not have a passphrase! 
+- Manually during the app creation process or at any other time. You [generate your own SSH keys](https://devcenter.bitrise.io/faq/how-to-generate-ssh-keypair/) and register them on Bitrise and at your Git provider. The SSH key should not have a passphrase!
 
 Optionally, you can save the private key on the virtual machine. If a key already exists on the path you specified in the **(Optional) path to save the private key** input, it will be overwritten.
 
@@ -47,9 +47,9 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 
 | Key | Description | Flags | Default |
 | --- | --- | --- | --- |
-| `ssh_rsa_private_key` |  | sensitive | `$SSH_RSA_PRIVATE_KEY` |
-| `ssh_key_save_path` |  |  | `$HOME/.ssh/bitrise_step_activate_ssh_key` |
-| `is_remove_other_identities` | (Optional) Remove other or previously loaded keys and restart ssh-agent?  Options:  * "true" * "false" |  | `true` |
+| `ssh_rsa_private_key` | The private key of the SSH keypair. | sensitive | `$SSH_RSA_PRIVATE_KEY` |
+| `ssh_key_save_path` | Path where the private key should be saved |  | `$HOME/.ssh/bitrise_step_activate_ssh_key` |
+| `is_remove_other_identities` | When the step detects a running SSH agent and this input is true, it removes all loaded identities and restarts the agent before loading the configured key.  Note: this only affects the in-memory SSH agent data, keys on disk are not touched.  Options:  * "true" * "false" |  | `true` |
 | `verbose` | Enable verbose log option for better debug | required | `false` |
 </details>
 

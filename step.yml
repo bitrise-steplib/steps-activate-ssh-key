@@ -51,14 +51,16 @@ toolkit:
 inputs:
 - ssh_rsa_private_key: $SSH_RSA_PRIVATE_KEY
   opts:
-    title: SSH private key in RSA format
+    title: SSH private key content
+    description: |-
+      The private key of the SSH keypair in RSA format.
     is_expand: true
     is_dont_change_value: true
     is_sensitive: true
 - ssh_key_save_path: $HOME/.ssh/bitrise_step_activate_ssh_key
   opts:
-    title: |-
-      (Optional) path to save the private key.
+    title: SSH key save path
+    description: Path where the private key should be saved
     is_expand: true
     is_dont_change_value: true
 - is_remove_other_identities: "true"
