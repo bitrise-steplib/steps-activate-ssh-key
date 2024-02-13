@@ -63,9 +63,11 @@ inputs:
     is_dont_change_value: true
 - is_remove_other_identities: "true"
   opts:
-    title: Remove other identities?
+    title: Remove other identities from SSH agent
     description: |-
-      (Optional) Remove other or previously loaded keys and restart ssh-agent?
+      When the step detects a running SSH agent and this input is true, it removes all loaded identities and restarts the agent before loading the configured key.
+
+      Note: this only affects the in-memory SSH agent data, keys on disk are not touched.
 
       Options:
 
@@ -75,7 +77,6 @@ inputs:
     value_options:
     - "true"
     - "false"
-    is_dont_change_value: true
 - verbose: "false"
   opts:
     title: Enable verbose logging
