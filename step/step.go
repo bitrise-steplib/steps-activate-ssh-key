@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/step"
-	"github.com/bitrise-io/go-steputils/stepconf"
-	"github.com/bitrise-io/go-utils/env"
-	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-steputils/v2/stepconf"
+	"github.com/bitrise-io/go-utils/v2/env"
+	"github.com/bitrise-io/go-utils/v2/fileutil"
+	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 )
 
@@ -37,14 +37,14 @@ type Result struct {
 type ActivateSSHKey struct {
 	inputParser   stepconf.InputParser
 	envRepository env.Repository
-	fileWriter    fileutil.FileWriter
+	fileManager   fileutil.FileManager
 	sshKeyAgent   sshkey.Agent
 	logger        log.Logger
 }
 
 // NewActivateSSHKey ...
-func NewActivateSSHKey(inputParser stepconf.InputParser, envRepository env.Repository, fileWriter fileutil.FileWriter, agent sshkey.Agent, logger log.Logger) *ActivateSSHKey {
-	return &ActivateSSHKey{inputParser: inputParser, envRepository: envRepository, fileWriter: fileWriter, sshKeyAgent: agent, logger: logger}
+func NewActivateSSHKey(inputParser stepconf.InputParser, envRepository env.Repository, fileManager fileutil.FileManager, agent sshkey.Agent, logger log.Logger) *ActivateSSHKey {
+	return &ActivateSSHKey{inputParser: inputParser, envRepository: envRepository, fileManager: fileManager, sshKeyAgent: agent, logger: logger}
 }
 
 // ProcessConfig ...
@@ -120,7 +120,7 @@ func (a ActivateSSHKey) activate(privateKeyPath, privateKey string, isRemoveOthe
 	// OpenSSH_8.1p1 on macOS requires a newline at the end of
 	// private key using the new format (starting with -----BEGIN OPENSSH PRIVATE KEY-----).
 	// See https://www.openssh.com/txt/release-7.8 for new format description.
-	if err := a.fileWriter.Write(privateKeyPath, privateKey+"\n", 0600); err != nil {
+	if err := a.fileManager.Write(privateKeyPath, privateKey+"\n", 0600); err != nil {
 		return "", newStepError(
 			"writing_ssh_key_failed",
 			fmt.Errorf("failed to write SSH key: %v", err),

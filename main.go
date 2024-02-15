@@ -3,13 +3,13 @@ package main
 import (
 	"os"
 
-	"github.com/bitrise-io/go-steputils/stepconf"
-	"github.com/bitrise-io/go-steputils/stepenv"
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/env"
-	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-steputils/v2/stepconf"
+	"github.com/bitrise-io/go-steputils/v2/stepenv"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/env"
+	"github.com/bitrise-io/go-utils/v2/fileutil"
+	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/sshkey"
 	"github.com/bitrise-steplib/steps-activate-ssh-key/step"
 )
@@ -20,8 +20,8 @@ func main() {
 
 func run() int {
 	logger := log.NewLogger()
-	fileWriter := fileutil.NewFileWriter()
-	tempDirProvider := pathutil.NewTempDirProvider()
+	fileWriter := fileutil.NewFileManager()
+	tempDirProvider := pathutil.NewPathProvider()
 	envRepository := env.NewRepository()
 	stepEnvRepository := stepenv.NewRepository(envRepository)
 	cmdFactory := command.NewFactory(envRepository)

@@ -29,12 +29,10 @@ description: |-
 website: https://github.com/bitrise-steplib/steps-activate-ssh-key
 source_code_url: https://github.com/bitrise-steplib/steps-activate-ssh-key
 support_url: https://github.com/bitrise-steplib/steps-activate-ssh-key/issues
-host_os_tags:
-- osx-10.9
+
 type_tags:
 - access-control
 
-requires_admin_user: false
 is_always_run: false
 is_skippable: false
 
@@ -42,6 +40,7 @@ deps:
   apt_get:
   - name: expect
   - name: git
+
 run_if: .IsCI
 
 toolkit:
