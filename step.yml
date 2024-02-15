@@ -35,15 +35,15 @@ source_code_url: https://github.com/bitrise-steplib/steps-activate-ssh-key
 support_url: https://github.com/bitrise-steplib/steps-activate-ssh-key/issues
 
 type_tags:
-  - access-control
+- access-control
 
 is_always_run: false
 is_skippable: false
 
 deps:
   apt_get:
-    - name: expect
-    - name: git
+  - name: expect
+  - name: git
 
 run_if: .IsCI
 
@@ -52,53 +52,53 @@ toolkit:
     package_name: github.com/bitrise-steplib/steps-activate-ssh-key
 
 inputs:
-  - ssh_rsa_private_key: $SSH_RSA_PRIVATE_KEY
-    opts:
-      title: SSH private key content
-      description: |-
-        The private key of the SSH keypair in RSA format.
-      is_expand: true
-      is_dont_change_value: true
-      is_sensitive: true
-  - ssh_key_save_path: $HOME/.ssh/bitrise_step_activate_ssh_key
-    opts:
-      title: SSH key save path
-      description: Path where the private key should be saved
-      is_expand: true
-      is_dont_change_value: true
-  - is_remove_other_identities: "true"
-    opts:
-      title: Remove other identities from SSH agent
-      description: |-
-        When the step detects a running SSH agent and this input is true, it removes all loaded identities and restarts the agent before loading the configured key.
+- ssh_rsa_private_key: $SSH_RSA_PRIVATE_KEY
+  opts:
+    title: SSH private key content
+    description: |-
+      The private key of the SSH keypair in RSA format.
+    is_expand: true
+    is_dont_change_value: true
+    is_sensitive: true
+- ssh_key_save_path: $HOME/.ssh/bitrise_step_activate_ssh_key
+  opts:
+    title: SSH key save path
+    description: Path where the private key should be saved
+    is_expand: true
+    is_dont_change_value: true
+- is_remove_other_identities: "true"
+  opts:
+    title: Remove other identities from SSH agent
+    description: |-
+      When the step detects a running SSH agent and this input is true, it removes all loaded identities and restarts the agent before loading the configured key.
 
-        When there is no running SSH agent, this input has no effect.
+      When there is no running SSH agent, this input has no effect.
 
-        Note: this only affects the in-memory SSH agent data, keys on disk are not touched.
+      Note: this only affects the in-memory SSH agent data, keys on disk are not touched.
 
-        Options:
+      Options:
 
-        * "true"
-        * "false"
-      is_expand: false
-      value_options:
-        - "true"
-        - "false"
-  - verbose: "false"
-    opts:
-      title: Enable verbose logging
-      summary: Enable verbose log option for better debug
-      description: Enable verbose log option for better debug
-      is_expand: true
-      is_required: true
-      value_options:
-        - "true"
-        - "false"
+      * "true"
+      * "false"
+    is_expand: false
+    value_options:
+    - "true"
+    - "false"
+- verbose: "false"
+  opts:
+    title: Enable verbose logging
+    summary: Enable verbose log option for better debug
+    description: Enable verbose log option for better debug
+    is_expand: true
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
 outputs:
-  - SSH_AUTH_SOCK:
-    opts:
-      title: SSH agent socket path
-      description: |-
-        If the `is_should_start_new_agent` option is enabled, and no accessible ssh-agent is found, the step will start a new ssh-agent.
+- SSH_AUTH_SOCK:
+  opts:
+    title: SSH agent socket path
+    description: |-
+      If the `is_should_start_new_agent` option is enabled, and no accessible ssh-agent is found, the step will start a new ssh-agent.
 
-        This output contains the path of the socket created by ssh-agent, which can be used to access the started ssh-agent ([learn more](https://www.man7.org/linux/man-pages/man1/ssh-agent.1.html))
+      This output contains the path of the socket created by ssh-agent, which can be used to access the started ssh-agent ([learn more](https://www.man7.org/linux/man-pages/man1/ssh-agent.1.html))
