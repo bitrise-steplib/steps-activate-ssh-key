@@ -40,11 +40,6 @@ type_tags:
 is_always_run: false
 is_skippable: false
 
-deps:
-  apt_get:
-  - name: expect
-  - name: git
-
 run_if: .IsCI
 
 toolkit:
