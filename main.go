@@ -29,7 +29,6 @@ func main() {
 		panic("could not start CPU profile: " + err.Error())
 	}
 	defer pprof.StopCPUProfile()
-	defer cpuProfile.Close()
 
 	memProfilePth := filepath.Join(deployDir, "mem.prof")
 	memProfile, err := os.Create(memProfilePth)
