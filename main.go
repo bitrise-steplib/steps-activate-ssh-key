@@ -25,11 +25,11 @@ func main() {
 	if err != nil {
 		panic("could not create CPU profile: " + err.Error())
 	}
-	defer cpuProfile.Close()
 	if err := pprof.StartCPUProfile(cpuProfile); err != nil {
 		panic("could not start CPU profile: " + err.Error())
 	}
 	defer pprof.StopCPUProfile()
+	defer cpuProfile.Close()
 
 	memProfilePth := filepath.Join(deployDir, "mem.prof")
 	memProfile, err := os.Create(memProfilePth)
