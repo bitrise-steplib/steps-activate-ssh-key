@@ -18,6 +18,12 @@ import (
 )
 
 func main() {
+	exitCode := run()
+	os.Exit(exitCode)
+}
+
+func run() int {
+	////////////////////////////////////////
 	deployDir := os.Getenv("BITRISE_DEPLOY_DIR")
 
 	cpuProfilePth := filepath.Join(deployDir, "cpu.prof")
@@ -25,30 +31,32 @@ func main() {
 	if err != nil {
 		panic("could not create CPU profile: " + err.Error())
 	}
+	defer cpuProfile.Close()
 	if err := pprof.StartCPUProfile(cpuProfile); err != nil {
 		panic("could not start CPU profile: " + err.Error())
 	}
 	defer pprof.StopCPUProfile()
+	////////////////////////////////////////
 
+	exitCode := runStep()
+
+	////////////////////////////////////////
 	memProfilePth := filepath.Join(deployDir, "mem.prof")
 	memProfile, err := os.Create(memProfilePth)
 	if err != nil {
 		panic("could not create memory profile: " + err.Error())
 	}
 	defer memProfile.Close()
-
 	runtime.GC()
-
-	exitCode := run()
-
 	if err := pprof.WriteHeapProfile(memProfile); err != nil {
 		panic("could not write memory profile: " + err.Error())
 	}
+	////////////////////////////////////////
 
-	os.Exit(exitCode)
+	return exitCode
 }
 
-func run() int {
+func runStep() int {
 	logger := log.NewLogger()
 	fileWriter := fileutil.NewFileManager()
 	tempDirProvider := pathutil.NewPathProvider()
