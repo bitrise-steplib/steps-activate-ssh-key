@@ -32,6 +32,7 @@ func run() int {
 		panic("could not create CPU profile: " + err.Error())
 	}
 	defer cpuProfile.Close()
+	runtime.SetCPUProfileRate(500)
 	if err := pprof.StartCPUProfile(cpuProfile); err != nil {
 		panic("could not start CPU profile: " + err.Error())
 	}
