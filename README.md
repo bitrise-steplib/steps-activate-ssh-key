@@ -2,21 +2,25 @@
 
 [![Step changelog](https://shields.io/github/v/release/bitrise-steplib/steps-activate-ssh-key?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-steplib/steps-activate-ssh-key/releases)
 
-Setup the SSH Key to use with the current workflow
+Add your SSH key to the build machine to access private repositories
 
 <details>
 <summary>Description</summary>
 
-This Step makes sure Bitrise has access to your repository and thus able to clone your code to our virtual machines. The Step saves the provided private key of your SSH keypair to a file and then loads it into the user's ssh-agent with `ssh-add`.
+This Step makes sure Bitrise has access to your repository when cloning SSH URLs. The Step saves the provided private key of your SSH keypair to a file and then loads it into the SSH agent.
 
 ### Configuring the Step
 
-By default, you do not have to change anything about the Step's configuration. All you need to do is make sure that you registered your key pair on Bitrise and the public key at your Git provider. You can generate and register an SSH keypair in two ways.
+By default, you do not have to change anything about the Step's configuration.
+
+The step downloads the SSH key defined in your App Settings, so most of the time it's the only thing you need to configure ([more info](https://devcenter.bitrise.io/en/connectivity/configuring-ssh-keys).
+
+ All you need to do is make sure that you registered your key pair on Bitrise and the public key at your Git provider. You can generate and register an SSH keypair in two ways.
 
 - Automatically during the [app creation process](https://devcenter.bitrise.io/getting-started/adding-a-new-app/#setting-up-ssh-keys).
 - Manually during the app creation process or at any other time. You [generate your own SSH keys](https://devcenter.bitrise.io/faq/how-to-generate-ssh-keypair/) and register them on Bitrise and at your Git provider. The SSH key should not have a passphrase!
 
-Optionally, you can save the private key on the virtual machine. If a key already exists on the path you specified in the **(Optional) path to save the private key** input, it will be overwritten.
+Note: if you configure to use HTTPS instead of SSH git access, you don't need to use this Step.
 
 ### Troubleshooting
 
@@ -58,7 +62,7 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 
 | Environment Variable | Description |
 | --- | --- |
-| `SSH_AUTH_SOCK` | If the `is_should_start_new_agent` option is enabled, and no accessible ssh-agent is found, the step will start a new ssh-agent.  This output environment variable will contain the path of the SSH Auth Socket, which can be used to access the started ssh-agent. |
+| `SSH_AUTH_SOCK` | If the `is_should_start_new_agent` option is enabled, and no accessible ssh-agent is found, the step will start a new ssh-agent.  This output contains the path of the socket created by ssh-agent, which can be used to access the started ssh-agent ([learn more](https://www.man7.org/linux/man-pages/man1/ssh-agent.1.html)) |
 </details>
 
 ## 🙋 Contributing
