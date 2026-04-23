@@ -10,7 +10,7 @@ type Error struct {
 }
 
 // Recommendation interface
-type Recommendation map[string]interface{}
+type Recommendation map[string]any
 
 // NewError constructs a step.Error
 func NewError(stepID, tag string, err error, shortMsg string) *Error {

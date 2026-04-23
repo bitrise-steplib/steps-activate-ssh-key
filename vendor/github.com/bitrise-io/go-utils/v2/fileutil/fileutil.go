@@ -6,7 +6,14 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+// CopyOptions configures a [FileManager.CopyFile] operation.
+// A nil pointer means default behavior.
+type CopyOptions struct {
+	Overwrite bool // Overwrite replaces the destination file if it already exists.
+}
 
 // FileManager ...
 type FileManager interface {
@@ -17,14 +24,20 @@ type FileManager interface {
 	RemoveAll(path string) error
 	Write(path string, value string, perm os.FileMode) error
 	WriteBytes(path string, value []byte) error
+	FileSizeInBytes(pth string) (int64, error)
+	CopyFile(src, dst string, opts *CopyOptions) error
+	CopyDir(src, dst string, opts *CopyOptions) error
+	Lstat(path string) (os.FileInfo, error)
+	LastNLines(s string, n int) string
 }
 
 type fileManager struct {
+	osProxy OsProxy
 }
 
 // NewFileManager ...
 func NewFileManager() FileManager {
-	return fileManager{}
+	return fileManager{osProxy: RealOS{}}
 }
 
 // ReadDirEntryNames reads the named directory using os.ReadDir and returns the dir entries' names.
@@ -88,4 +101,64 @@ func (fileManager) ensureSavePath(savePath string) error {
 // WriteBytes ...
 func (f fileManager) WriteBytes(path string, value []byte) error {
 	return os.WriteFile(path, value, 0600)
+}
+
+// FileSizeInBytes checks if the provided path exists and return with the file size (bytes) using os.Lstat.
+func (fileManager) FileSizeInBytes(pth string) (int64, error) {
+	if pth == "" {
+		return 0, errors.New("No path provided")
+	}
+	fileInf, err := os.Stat(pth)
+	if err != nil {
+		return 0, err
+	}
+
+	return fileInf.Size(), nil
+}
+
+// Lstat implements FileManager by delegating to os.Lstat via the osProxy.
+func (fm fileManager) Lstat(path string) (os.FileInfo, error) {
+	return fm.osProxy.Lstat(path)
+}
+
+// LastNLines returns the last n lines of the given string s.
+func (fileManager) LastNLines(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
+	// normalize CRLF to LF if needed
+	if strings.Contains(s, "\r\n") {
+		s = strings.ReplaceAll(s, "\r\n", "\n")
+	}
+
+	// skip trailing newlines so we don't count empty trailing lines
+	i := len(s) - 1
+	for i >= 0 && s[i] == '\n' {
+		i--
+	}
+	if i < 0 {
+		return "" // string was all newlines
+	}
+
+	// scan backward counting '\n' occurrences
+	count := 0
+	for ; i >= 0; i-- {
+		if s[i] == '\n' {
+			count++
+			if count == n {
+				// substring after this newline is the last n lines
+				start := i + 1
+				res := s[start:]
+				// trim trailing whitespace (spaces, tabs, newlines, etc.)
+				return strings.TrimRightFunc(res, func(r rune) bool {
+					return r == ' ' || r == '\t' || r == '\n' || r == '\r' || r == '\f' || r == '\v'
+				})
+			}
+		}
+	}
+
+	// fewer than n newlines => return whole string (trim trailing whitespace)
+	return strings.TrimRightFunc(s, func(r rune) bool {
+		return r == ' ' || r == '\t' || r == '\n' || r == '\r' || r == '\f' || r == '\v'
+	})
 }
