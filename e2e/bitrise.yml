@@ -1,59 +1,50 @@
 format_version: "11"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
-app:
-  envs:
-  - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
-  # define these envs in your .bitrise.secrets.yml
-  - INVALID_SSH_PRIVATE_KEY: $INVALID_SSH_PRIVATE_KEY
-  - MISSING_NEWLINE_SSH_PRIVATE_KEY: $MISSING_NEWLINE_SSH_PRIVATE_KEY
-  - PEM_FORMAT_SSH_PRIVATE_KEY: $PEM_FORMAT_SSH_PRIVATE_KEY
-  - OPENSSH_FORMAT_SSH_PRIVATE_KEY: $OPENSSH_FORMAT_SSH_PRIVATE_KEY
-
 workflows:
   test_pem_format_key:
+    description: Activate a freshly generated RSA key in PEM format.
     envs:
-    - SSH_RSA_PRIVATE_KEY: $PEM_FORMAT_SSH_PRIVATE_KEY
+    - KEYGEN_ARGS: -t rsa -b 2048 -m PEM
     after_run:
+    - _generate_key
     - _run
     - _check_output
 
   test_openssh_format_key:
+    description: Activate a freshly generated Ed25519 key in OpenSSH format.
     envs:
-    - SSH_RSA_PRIVATE_KEY: $OPENSSH_FORMAT_SSH_PRIVATE_KEY
+    - KEYGEN_ARGS: -t ed25519
     after_run:
+    - _generate_key
     - _run
     - _check_output
 
   test_missing_newline_key:
+    description: Activate an OpenSSH format key that lost its trailing newline, which some OpenSSH versions reject.
     envs:
-    - SSH_RSA_PRIVATE_KEY: $MISSING_NEWLINE_SSH_PRIVATE_KEY
+    - KEYGEN_ARGS: -t ed25519
+    - STRIP_TRAILING_NEWLINE: "true"
     after_run:
+    - _generate_key
     - _run
     - _check_output
 
-  utility_fail_invalid_key:
-    envs:
-    - SSH_RSA_PRIVATE_KEY: $INVALID_SSH_PRIVATE_KEY
-    after_run:
-    - _run
-    - _check_output
-
-  test_invalid_key:
+  _generate_key:
     steps:
     - script:
+        title: Generate throwaway SSH key
         inputs:
         - content: |-
-            #!/bin/env bash
-            set -x
-            if [[ -n "$ORIG_BITRISE_SOURCE_DIR" ]]; then
-              cd $ORIG_BITRISE_SOURCE_DIR
-            fi
-
-            bitrise run utility_fail_invalid_key
-            if [[ $? != 1 ]]; then
-              echo "Invalid key did not fail the Step"
-              exit 1
+            #!/bin/bash
+            set -e
+            key_dir=$(mktemp -d)
+            ssh-keygen -q -N "" -C e2e -f "$key_dir/key" $KEYGEN_ARGS
+            if [[ "$STRIP_TRAILING_NEWLINE" == "true" ]]; then
+              # Command substitution drops the trailing newline.
+              envman add --key SSH_RSA_PRIVATE_KEY --value "$(cat "$key_dir/key")" --no-expand --sensitive
+            else
+              envman add --key SSH_RSA_PRIVATE_KEY --valuefile "$key_dir/key" --no-expand --sensitive
             fi
 
   _run:
